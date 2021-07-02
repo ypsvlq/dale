@@ -4,18 +4,25 @@
 
 #define LINE_MAX 2048
 
-void parse(FILE *f) {
+const char *fname;
+size_t line;
+
+void parse(const char *path) {
 	static char buf[LINE_MAX], s1[LINE_MAX], s2[LINE_MAX];
 	char *p;
-	size_t line;
+	FILE *f;
 	struct task *task;
 	enum {
 		NONE,
 		TASK,
 	} state;
 
+	f = fopen(path, "r");
+	if (!f)
+		err("Could not open '%s'", path);
+	fname = path;
+
 	state = NONE;
-	line = 0;
 	while (fgets(buf, LINE_MAX, f)) {
 		line++;
 		p = buf + strspn(buf, " \t");
@@ -53,4 +60,9 @@ void parse(FILE *f) {
 		}
 		err("Syntax error");
 	}
+
+	line = 0;
+	if (ferror(f))
+		err("Failed reading '%s'", path);
+	fclose(f);
 }

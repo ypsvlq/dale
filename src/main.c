@@ -10,13 +10,7 @@ int main(int argc, char *argv[]) {
 	(void)argc;
 	(void)argv;
 
-	FILE *f;
-
-	f = fopen("build.dale", "r");
-	if (!f)
-		err("Could not open build.dale");
-	parse(f);
-	fclose(f);
+	parse("build.dale");
 
 	for (size_t i = 0; i < ntasks; i++) {
 		printf("%s (%s) srcs =", tasks[i].name, tasktypes[tasks[i].type]);

@@ -9,6 +9,8 @@ noreturn void err(const char *fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
 	fprintf(stderr, "Error: ");
+	if (line)
+		fprintf(stderr, "%s line %zu: ", fname, line);
 	vfprintf(stderr, fmt, ap);
 	fputc('\n', stderr);
 	va_end(ap);
