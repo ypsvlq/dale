@@ -3,7 +3,7 @@
 include config.mk
 
 out = dale
-src = src/main.c src/util.c src/parse.c
+src = src/main.c src/util.c src/parse.c src/variable.c
 obj = $(src:.c=.o)
 
 $(out): $(obj)
