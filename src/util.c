@@ -33,6 +33,12 @@ void *xrealloc(void *p, size_t n) {
 
 char *xstrdup(const char *s) {
 	size_t n = strlen(s) + 1;
-	char *s2 = xmalloc(n);
-	return memcpy(s2, s, n);
+	return memcpy(xmalloc(n), s, n);
+}
+
+char *xstrndup(const char *s, size_t max) {
+	size_t n = strlen(s) + 1;
+	if (max < n)
+		n = max;
+	return memcpy(xmalloc(n), s, n);
 }

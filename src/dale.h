@@ -27,5 +27,6 @@ noreturn void err(const char *fmt, ...);
 void *xmalloc(size_t n);
 void *xrealloc(void *p, size_t n);
 char *xstrdup(const char *s);
+char *xstrndup(const char *s, size_t max);
 
 void parse(const char *path);
