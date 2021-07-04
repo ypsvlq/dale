@@ -37,3 +37,5 @@ void varset(const char *name, const char *val);
 void varunset(const char *name);
 char *varget(const char *name);
 char *varexpand(const char *str);
+
+void hostmkdir(const char *path);

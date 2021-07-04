@@ -1,3 +1,5 @@
+HOST = # posix/windows
+
 CC = cc
 CFLAGS = -Wall -g
 
