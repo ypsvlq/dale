@@ -29,6 +29,8 @@ void *xrealloc(void *p, size_t n);
 char *xstrdup(const char *s);
 char *xstrndup(const char *s, size_t max);
 
+int asprintf(char **outp, const char *fmt, ...);
+
 void parse(const char *path);
 
 void varset(const char *name, const char *val);

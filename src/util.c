@@ -42,3 +42,16 @@ char *xstrndup(const char *s, size_t max) {
 		n = max;
 	return memcpy(xmalloc(n), s, n);
 }
+
+int asprintf(char **outp, const char *fmt, ...) {
+	va_list ap, ap2;
+	int n;
+	va_start(ap, fmt);
+	va_copy(ap2, ap);
+	n = vsnprintf(NULL, 0, fmt, ap2);
+	*outp = xmalloc(n + 1);
+	vsprintf(*outp, fmt, ap);
+	va_end(ap2);
+	va_end(ap);
+	return n;
+}
