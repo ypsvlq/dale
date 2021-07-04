@@ -4,6 +4,8 @@
 #include <inttypes.h>
 #include "../dale.h"
 
+static UINT defaultcp;
+
 static PWSTR mbtows(const char *s) {
 	PWSTR ws;
 	int n;
@@ -40,6 +42,15 @@ static char *winerr(void) {
 		}
 	}
 	return wstomb(buf);
+}
+
+void hostinit(void) {
+	defaultcp = GetConsoleOutputCP();
+	SetConsoleOutputCP(CP_UTF8);
+}
+
+void hostquit(void) {
+	SetConsoleOutputCP(defaultcp);
 }
 
 void hostmkdir(const char *path) {

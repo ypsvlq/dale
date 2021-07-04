@@ -14,6 +14,7 @@ int main(int argc, char *argv[]) {
 	char *p, *p2;
 	int skip;
 
+	hostinit();
 	parse("build.dale");
 
 	if (tasks) {
@@ -35,4 +36,6 @@ int main(int argc, char *argv[]) {
 			}
 		}
 	}
+
+	hostquit();
 }

@@ -38,4 +38,6 @@ void varunset(const char *name);
 char *varget(const char *name);
 char *varexpand(const char *str);
 
+void hostinit(void);
+void hostquit(void);
 void hostmkdir(const char *path);

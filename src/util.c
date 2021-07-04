@@ -14,6 +14,7 @@ noreturn void err(const char *fmt, ...) {
 	vfprintf(stderr, fmt, ap);
 	fputc('\n', stderr);
 	va_end(ap);
+	hostquit();
 	exit(1);
 }
 
