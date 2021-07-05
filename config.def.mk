@@ -5,3 +5,4 @@ CFLAGS = -Wall -g
 
 LD = $(CC)
 LDFLAGS =
+LIBS =
