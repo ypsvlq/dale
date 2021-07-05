@@ -6,3 +6,5 @@ CFLAGS = -Wall -g
 LD = $(CC)
 LDFLAGS =
 LIBS =
+# windows:
+#LIBS = -lshlwapi

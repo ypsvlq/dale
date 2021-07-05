@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <stdlib.h>
 #include <inttypes.h>
+#include <shlwapi.h>
 #include "../dale.h"
 
 static UINT defaultcp;
@@ -57,4 +58,31 @@ void hostmkdir(const char *path) {
 	PWSTR wpath = mbtows(path);
 	if (!CreateDirectoryW(wpath, NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
 		err("Could not create directory '%s': %s", path, winerr());
+}
+
+char *hostfind(const char *name) {
+	PWSTR wpath;
+	WCHAR exts[_MAX_ENV];
+	WCHAR *p, *ctx;
+	size_t len;
+
+	wpath = xmalloc(MAX_PATH * sizeof(*wpath));
+	if (!MultiByteToWideChar(CP_UTF8, 0, name, -1, wpath, MAX_PATH))
+		err("MultiByteToWideChar '%s' failed", name);
+	if (!GetEnvironmentVariableW(L"PATHEXT", exts, LEN(exts)))
+		err("Could not get PATHEXT: %s", winerr());
+
+	len = wcslen(wpath);
+	p = wcstok_s(exts, L";", &ctx);
+	do {
+		if (len + wcslen(p) + 1 >= MAX_PATH)
+			continue;
+		wcscat(wpath, p);
+		if (PathFindOnPathW(wpath, NULL))
+			return wstomb(wpath);
+		wpath[len] = 0;
+	} while ((p = wcstok_s(NULL, L";", &ctx)));
+
+	free(wpath);
+	return NULL;
 }
