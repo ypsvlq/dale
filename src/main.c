@@ -16,14 +16,14 @@ static struct tc {
 #ifdef _WIN32
 	{
 		"msvc", ".obj", (char*[]){"cl", "link", 0},
-		"$CL /c /Fo:$out $in",
-		"$LINK /OUT:$out $in",
+		"\"$CL\" /nologo /c /Fo:$out $in",
+		"\"$LINK\" /NOLOGO /OUT:$out $in",
 	},
 #endif
 	{
 		"gcc", ".o", (char*[]){"gcc", 0},
-		"$GCC -c -o $out $in",
-		"$GCC -o $out $in",
+		"\"$GCC\" -c -o $out $in",
+		"\"$GCC\" -o $out $in",
 	},
 };
 
@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
 	(void)argc;
 	(void)argv;
 
-	char *p, *p2;
+	char *p, *p2, *p3;
 	struct tc *tc = NULL;
 	int skip;
 
@@ -83,6 +83,29 @@ int main(int argc, char *argv[]) {
 				}
 				free(p);
 			}
+
+			p2 = xstrdup("");
+			for (size_t j = 0; j < tasks[i].nsrcs; j++) {
+				varsetd("in", tasks[i].srcs[j]);
+				asprintf(&p, "build/%s_obj/%s%s", tasks[i].name, tasks[i].srcs[j], tc->objext);
+				varsetp("out", p);
+				asprintf(&p3, "%s %s", p2, p);
+				free(p2);
+				p2 = p3;
+				p = varexpand(tc->compile);
+				system(p);
+				free(p);
+				varunset("in");
+				varunset("out");
+			}
+			varsetp("in", p2);
+			asprintf(&p, "build/%s", tasks[i].name);
+			varsetp("out", p);
+			p = varexpand(tc->linkexe);
+			system(p);
+			free(p);
+			varunset("in");
+			varunset("out");
 		}
 	}
 
