@@ -49,5 +49,6 @@ char *varexpand(const char *str);
 
 void hostinit(void);
 void hostquit(void);
+void hostsetvars(void);
 void hostmkdir(const char *path);
 char *hostfind(const char *name);

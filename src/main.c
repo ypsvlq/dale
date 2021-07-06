@@ -36,6 +36,7 @@ int main(int argc, char *argv[]) {
 	int skip;
 
 	hostinit();
+	hostsetvars();
 	parse("build.dale");
 
 	for (size_t i = 0; i < LEN(tcs); i++) {

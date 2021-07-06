@@ -54,6 +54,11 @@ void hostquit(void) {
 	SetConsoleOutputCP(defaultcp);
 }
 
+void hostsetvars(void) {
+	varsetd("target", "windows");
+	varsetd("windows", "1");
+}
+
 void hostmkdir(const char *path) {
 	PWSTR wpath = mbtows(path);
 	if (!CreateDirectoryW(wpath, NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
