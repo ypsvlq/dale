@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "dale.h"
 
 noreturn void err(const char *fmt, ...) {
@@ -54,4 +55,12 @@ int asprintf(char **outp, const char *fmt, ...) {
 	va_end(ap2);
 	va_end(ap);
 	return n;
+}
+
+char *upperstr(const char *s) {
+	char *out = xmalloc(strlen(s) + 1);
+	for (size_t i = 0; s[i]; i++)
+		out[i] = toupper(s[i]);
+	out[strlen(s)] = 0;
+	return out;
 }

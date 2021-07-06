@@ -34,6 +34,7 @@ char *xstrdup(const char *s);
 char *xstrndup(const char *s, size_t max);
 
 int asprintf(char **outp, const char *fmt, ...);
+char *upperstr(const char *s);
 
 void parse(const char *path);
 
