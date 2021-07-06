@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "dale.h"
 
 #define LINE_MAX 2048
@@ -8,13 +9,15 @@ const char *fname;
 size_t line;
 
 static void loadarr(char ***out, size_t *outsz, char *val) {
-	char *p;
-	p = strtok(val, " \t");
+	char *p, *p2;
+	p2 = varexpand(val);
+	p = strtok(p2, " \t");
 	while (p) {
 		*out = xrealloc(*out, sizeof(**out) * ++*outsz);
 		(*out)[*outsz - 1] = xstrdup(p);
 		p = strtok(NULL, " \t");
 	}
+	free(p2);
 }
 
 void parse(const char *path) {
