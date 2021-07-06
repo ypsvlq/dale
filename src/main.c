@@ -7,15 +7,64 @@ const char *tasktypes[] = {0, "exe", "lib", "dll"};
 struct task *tasks;
 size_t ntasks;
 
+static struct tc {
+	char *name;
+	char *objext;
+	char **find;
+	char *compile, *linkexe;
+} tcs[] = {
+#ifdef _WIN32
+	{
+		"msvc", ".obj", (char*[]){"cl", "link", 0},
+		"$CL /c /Fo:$out $in",
+		"$LINK /OUT:$out $in",
+	},
+#endif
+	{
+		"gcc", ".o", (char*[]){"gcc", 0},
+		"$GCC -c -o $out $in",
+		"$GCC -o $out $in",
+	},
+};
+
 int main(int argc, char *argv[]) {
 	(void)argc;
 	(void)argv;
 
 	char *p, *p2;
+	struct tc *tc = NULL;
 	int skip;
 
 	hostinit();
 	parse("build.dale");
+
+	for (size_t i = 0; i < LEN(tcs); i++) {
+		for (size_t j = 0; tcs[i].find[j]; j++) {
+			p = hostfind(tcs[i].find[j]);
+			if (p) {
+				varset(upperstr(tcs[i].find[j]), p);
+				if (!tcs[i].find[j+1])
+					tc = &tcs[i];
+			} else {
+				for (size_t k = j; k;) {
+					k--;
+					p = upperstr(tcs[i].find[k]);
+					varunset(p);
+					free(p);
+				}
+				break;
+			}
+		}
+		if (tc)
+			break;
+	}
+	if (!tc) {
+		fputs("Error: No valid toolchain found (tried:", stderr);
+		for (size_t i = 0; i < LEN(tcs); i++)
+			fprintf(stderr, " %s", tcs[i].name);
+		fputs(")\n", stderr);
+		return 1;
+	}
 
 	if (tasks) {
 		hostmkdir("build");
