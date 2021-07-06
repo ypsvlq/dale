@@ -79,8 +79,12 @@ char *varget(const char *name) {
 }
 
 char *varexpand(const char *str) {
+	enum {NONE, COND} type;
+	static const char brackets[] = {0, '['};
+
 	char *out, *p, *p2;
-	size_t len, sz;
+	size_t len, sz, depth;
+
 	out = NULL;
 	len = 0;
 	while (1) {
@@ -97,6 +101,14 @@ char *varexpand(const char *str) {
 			out[len++] = '$';
 		} else {
 			str++;
+			type = NONE;
+			for (size_t i = 1; i < LEN(brackets); i++) {
+				if (*str == brackets[i]) {
+					type = i;
+					str++;
+					break;
+				}
+			}
 			sz = strspn(str, valid);
 			p = xstrndup(str, sz);
 			p2 = varget(p);
@@ -104,6 +116,40 @@ char *varexpand(const char *str) {
 				err("Undefined variable '%s'", p);
 			str += sz;
 			free(p);
+			if (type == COND) {
+				if (!*str || !*++str)
+					err("Unterminated conditional expansion");
+				sz = 0;
+				depth = 1;
+				while (depth) {
+					sz += strcspn(str+sz, "$]");
+					if (!str[sz]) {
+						err("Unterminated conditional expansion");
+					} else if (str[sz] == ']') {
+						depth--;
+						sz++;
+					} else if (str[sz+1] == '$') {
+						sz += 2;
+					} else if (str[sz+1] == '[') {
+						depth++;
+						sz += 2;
+					} else {
+						sz++;
+					}
+				}
+				p = xstrndup(str, sz-1);
+				str += sz;
+				if (*p2 == '1') {
+					p2 = varexpand(p);
+					sz = strlen(p2);
+					out = xrealloc(out, len+sz);
+					memcpy(out+len, p2, sz);
+					len += sz;
+					free(p2);
+				}
+				free(p);
+				continue;
+			}
 			sz = strlen(p2);
 			out = xrealloc(out, len+sz+1);
 			memcpy(out+len, p2, sz);
