@@ -38,10 +38,14 @@ char *xstrdup(const char *s) {
 }
 
 char *xstrndup(const char *s, size_t max) {
-	size_t n = strlen(s) + 1;
+	size_t n;
+	char *p;
+	n = strlen(s);
 	if (max < n)
 		n = max;
-	return memcpy(xmalloc(n), s, n);
+	p = memcpy(xmalloc(n + 1), s, n);
+	p[n] = 0;
+	return p;
 }
 
 int asprintf(char **outp, const char *fmt, ...) {
