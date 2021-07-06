@@ -28,15 +28,23 @@ static uint32_t getidx(const char *name) {
 	return hash(name) % BUCKETS;
 }
 
-void varset(const char *name, const char *val) {
+void varset(char *name, char *val) {
 	uint32_t idx;
 	struct var *var;
 	idx = getidx(name);
 	var = xmalloc(sizeof(*var));
 	var->next = tbl[idx];
-	var->name = xstrdup(name);
-	var->val = xstrdup(val);
+	var->name = name;
+	var->val = val;
 	tbl[idx] = var;
+}
+
+void varsetp(const char *name, char *val) {
+	varset(xstrdup(name), val);
+}
+
+void varsetd(const char *name, const char *val) {
+	varsetp(name, xstrdup(val));
 }
 
 void varunset(const char *name) {

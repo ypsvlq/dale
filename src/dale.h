@@ -38,7 +38,9 @@ char *upperstr(const char *s);
 
 void parse(const char *path);
 
-void varset(const char *name, const char *val);
+void varset(char *name, char *val);
+void varsetp(const char *name, char *val);
+void varsetd(const char *name, const char *val);
 void varunset(const char *name);
 char *varget(const char *name);
 char *varexpand(const char *str);
