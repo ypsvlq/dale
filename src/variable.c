@@ -112,8 +112,6 @@ char *varexpand(const char *str) {
 			sz = strspn(str, valid);
 			p = xstrndup(str, sz);
 			p2 = varget(p);
-			if (!p2)
-				err("Undefined variable '%s'", p);
 			str += sz;
 			free(p);
 			if (type == COND) {
@@ -139,7 +137,7 @@ char *varexpand(const char *str) {
 				}
 				p = xstrndup(str, sz-1);
 				str += sz;
-				if (*p2 == '1') {
+				if (p2 && *p2 == '1') {
 					p2 = varexpand(p);
 					sz = strlen(p2);
 					out = xrealloc(out, len+sz);
@@ -150,10 +148,12 @@ char *varexpand(const char *str) {
 				free(p);
 				continue;
 			}
-			sz = strlen(p2);
-			out = xrealloc(out, len+sz+1);
-			memcpy(out+len, p2, sz);
-			len += sz;
+			if (p2) {
+				sz = strlen(p2);
+				out = xrealloc(out, len+sz+1);
+				memcpy(out+len, p2, sz);
+				len += sz;
+			}
 		}
 	}
 	if (!len)
