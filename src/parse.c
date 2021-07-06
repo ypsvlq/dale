@@ -7,6 +7,16 @@
 const char *fname;
 size_t line;
 
+static void loadarr(char ***out, size_t *outsz, char *val) {
+	char *p;
+	p = strtok(val, " \t");
+	while (p) {
+		*out = xrealloc(*out, sizeof(**out) * ++*outsz);
+		(*out)[*outsz - 1] = xstrdup(p);
+		p = strtok(NULL, " \t");
+	}
+}
+
 void parse(const char *path) {
 	static char buf[LINE_MAX], s1[LINE_MAX], s2[LINE_MAX];
 	char *p;
@@ -45,16 +55,13 @@ void parse(const char *path) {
 		} else {
 			if (sscanf(p, "%[^: ] : %[^\n]", s1, s2) == 2) {
 				if (state == TASK) {
-					if (!strcmp(s1, "src")) {
-						p = strtok(s2, " \t");
-						while (p) {
-							task->srcs = xrealloc(task->srcs, sizeof(*task->srcs) * ++task->nsrcs);
-							task->srcs[task->nsrcs-1] = xstrdup(p);
-							p = strtok(NULL, " \t");
-						}
-						continue;
-					}
-					err("Invalid task variable '%s'", s1);
+					if (!strcmp(s1, "src"))
+						loadarr(&task->srcs, &task->nsrcs, s2);
+					else if (!strcmp(s1, "lib"))
+						loadarr(&task->libs, &task->nlibs, s2);
+					else
+						err("Invalid task variable '%s'", s1);
+					continue;
 				}
 			}
 		}

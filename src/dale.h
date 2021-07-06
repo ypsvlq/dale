@@ -17,6 +17,8 @@ struct task {
 	char *name;
 	char **srcs;
 	size_t nsrcs;
+	char **libs;
+	size_t nlibs;
 };
 
 extern const char *tasktypes[4];

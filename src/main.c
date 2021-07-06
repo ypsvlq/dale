@@ -9,21 +9,21 @@ size_t ntasks;
 
 static struct tc {
 	char *name;
-	char *objext;
+	char *objext, *libprefix;
 	char **find;
 	char *compile, *linkexe;
 } tcs[] = {
 #ifdef _WIN32
 	{
-		"msvc", ".obj", (char*[]){"cl", "link", 0},
+		"msvc", ".obj", "/DEFAULTLIB:", (char*[]){"cl", "link", 0},
 		"\"$CL\" /nologo /c /Fo:$out $in",
-		"\"$LINK\" /NOLOGO /OUT:$out $in",
+		"\"$LINK\" /NOLOGO $lib /OUT:$out $in",
 	},
 #endif
 	{
-		"gcc", ".o", (char*[]){"gcc", 0},
+		"gcc", ".o", "-l", (char*[]){"gcc", 0},
 		"\"$GCC\" -c -o $out $in",
-		"\"$GCC\" -o $out $in",
+		"\"$GCC\" -o $out $in $lib",
 	},
 };
 
@@ -98,14 +98,23 @@ int main(int argc, char *argv[]) {
 				varunset("in");
 				varunset("out");
 			}
+
 			varsetp("in", p2);
 			asprintf(&p, "build/%s", tasks[i].name);
 			varsetp("out", p);
+			p = xstrdup("");
+			for (size_t j = 0; j < tasks[i].nlibs; j++) {
+				asprintf(&p2, "%s %s%s", p, tc->libprefix, tasks[i].libs[j]);
+				free(p);
+				p = p2;
+			}
+			varsetp("lib", p);
 			p = varexpand(tc->linkexe);
 			system(p);
 			free(p);
 			varunset("in");
 			varunset("out");
+			varunset("lib");
 		}
 	}
 
