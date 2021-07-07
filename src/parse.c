@@ -105,13 +105,13 @@ static const char *reada(void *data) {
 }
 
 void parsea(const char *arr[], size_t len) {
+	fname = "<builtin>";
 	parse(reada, &(struct reada){arr, len});
 }
 
 static const char *readf(void *data) {
 	static char buf[LINE_MAX];
 	FILE *f = data;
-	fname = "<builtin>";
 	return fgets(buf, LINE_MAX, f);
 }
 
