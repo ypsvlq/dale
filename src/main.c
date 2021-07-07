@@ -4,6 +4,23 @@
 
 const char *tasktypes[] = {0, "exe", "lib", "dll"};
 
+static const char *builtin[] = {
+#ifdef _WIN32
+"toolchain(msvc)",
+"	find: cl link",
+"	objext: .obj",
+"	libprefix: /DEFAULTLIB:",
+"	compile: \"$CL\" /nologo /c /Fo:$out $in",
+"	linkexe: \"$LINK\" /NOLOGO $lib /OUT:$out.exe $in",
+#endif
+"toolchain(gcc)",
+"	find: gcc",
+"	objext: .o",
+"	libprefix: -l",
+"	compile: \"$GCC\" -c -o $out $in",
+"	linkexe: \"$GCC\" -o $out $in $lib",
+};
+
 struct task *tasks;
 size_t ntasks;
 struct tc *tcs;
@@ -19,7 +36,8 @@ int main(int argc, char *argv[]) {
 
 	hostinit();
 	hostsetvars();
-	parse("build.dale");
+	parsea(builtin, LEN(builtin));
+	parsef("build.dale");
 
 	for (size_t i = 0; i < ntcs; i++) {
 		for (size_t j = 0; j < tcs[i].nfind; j++) {

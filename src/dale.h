@@ -48,7 +48,8 @@ char *xstrndup(const char *s, size_t max);
 int asprintf(char **outp, const char *fmt, ...);
 char *upperstr(const char *s);
 
-void parse(const char *path);
+void parsea(const char *arr[], size_t len);
+void parsef(const char *path);
 
 void varset(char *name, char *val);
 void varsetp(const char *name, char *val);

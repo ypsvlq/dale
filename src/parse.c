@@ -20,21 +20,15 @@ static void loadarr(char ***out, size_t *outsz, char *val) {
 	free(p2);
 }
 
-void parse(const char *path) {
-	static char buf[LINE_MAX], s1[LINE_MAX], s2[LINE_MAX];
-	char *p;
-	FILE *f;
+void parse(const char *(*read)(void *data), void *data) {
+	static char s1[LINE_MAX], s2[LINE_MAX];
+	const char *buf, *p;
 	enum {NONE, TASK, TOOLCHAIN} state;
 	struct task *task;
 	struct tc *tc;
 
-	f = fopen(path, "r");
-	if (!f)
-		err("Could not open '%s'", path);
-	fname = path;
-
 	state = NONE;
-	while (fgets(buf, LINE_MAX, f)) {
+	while ((buf = read(data))) {
 		line++;
 		p = buf + strspn(buf, " \t");
 		if (*p == '\n' || *p == '#')
@@ -96,6 +90,37 @@ void parse(const char *path) {
 	}
 
 	line = 0;
+}
+
+struct reada {
+	const char **arr;
+	size_t len;
+};
+
+static const char *reada(void *data) {
+	struct reada *d = data;
+	if (d->len--)
+		return *(d->arr++);
+	return NULL;
+}
+
+void parsea(const char *arr[], size_t len) {
+	parse(reada, &(struct reada){arr, len});
+}
+
+static const char *readf(void *data) {
+	static char buf[LINE_MAX];
+	FILE *f = data;
+	fname = "<builtin>";
+	return fgets(buf, LINE_MAX, f);
+}
+
+void parsef(const char *path) {
+	FILE *f = f = fopen(path, "r");
+	if (!f)
+		err("Could not open '%s'", path);
+	fname = path;
+	parse(readf, f);
 	if (ferror(f))
 		err("Failed reading '%s'", path);
 	fclose(f);
