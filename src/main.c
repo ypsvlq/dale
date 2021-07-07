@@ -41,6 +41,10 @@ int main(int argc, char *argv[]) {
 	parsef("build.dale");
 
 	for (size_t i = 0; i < ntcs; i++) {
+		if (!tcs[i].find || !tcs[i].objext || !tcs[i].libprefix || !tcs[i].compile || !tcs[i].linkexe) {
+			fprintf(stderr, "Warning: Skipping underspecified toolchain '%s'\n", tcs[i].name);
+			continue;
+		}
 		for (size_t j = 0; j < tcs[i].nfind; j++) {
 			p = hostfind(tcs[i].find[j]);
 			if (p) {
