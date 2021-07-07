@@ -33,6 +33,7 @@ int main(int argc, char *argv[]) {
 	char *p, *p2, *p3;
 	struct tc *tc = NULL;
 	int skip;
+	size_t taskn = 1;
 
 	hostinit();
 	hostsetvars();
@@ -66,10 +67,13 @@ int main(int argc, char *argv[]) {
 		fputs(")\n", stderr);
 		return 1;
 	}
+	printf("Using toolchain '%s'\n", tc->name);
 
 	if (tasks) {
 		hostmkdir("build");
 		for (size_t i = 0; i < ntasks; i++) {
+			printf("[%zu/%zu] %s\n", taskn++, ntasks, tasks[i].name);
+
 			skip = asprintf(&p, "build/%s_obj", tasks[i].name);
 			hostmkdir(p);
 			free(p);
@@ -87,6 +91,7 @@ int main(int argc, char *argv[]) {
 
 			p2 = xstrdup("");
 			for (size_t j = 0; j < tasks[i].nsrcs; j++) {
+				printf("=> Compiling %s\n", tasks[i].srcs[j]);
 				varsetd("in", tasks[i].srcs[j]);
 				asprintf(&p, "build/%s_obj/%s%s", tasks[i].name, tasks[i].srcs[j], tc->objext);
 				varsetp("out", p);
@@ -102,6 +107,7 @@ int main(int argc, char *argv[]) {
 
 			varsetp("in", p2);
 			asprintf(&p, "build/%s", tasks[i].name);
+			printf("=> Linking %s\n", p);
 			varsetp("out", p);
 			p = xstrdup("");
 			for (size_t j = 0; j < tasks[i].nlibs; j++) {
