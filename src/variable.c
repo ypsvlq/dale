@@ -79,8 +79,8 @@ char *varget(const char *name) {
 }
 
 char *varexpand(const char *str) {
-	enum {NONE, COND} type;
-	static const char brackets[] = {0, '['};
+	enum {NONE, NORMAL, COND} type;
+	static const char brackets[] = {0, '(', '['};
 
 	char *out, *p, *p2;
 	size_t len, sz, depth;
@@ -153,6 +153,11 @@ char *varexpand(const char *str) {
 				out = xrealloc(out, len+sz+1);
 				memcpy(out+len, p2, sz);
 				len += sz;
+			}
+			if (type == NORMAL) {
+				if (*str != ')')
+					err("Unterminated variable expansion");
+				str++;
 			}
 		}
 	}
