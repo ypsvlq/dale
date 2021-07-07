@@ -21,9 +21,19 @@ struct task {
 	size_t nlibs;
 };
 
+struct tc {
+	char *name;
+	char **find;
+	size_t nfind;
+	char *objext, *libprefix;
+	char *compile, *linkexe;
+};
+
 extern const char *tasktypes[4];
 extern struct task *tasks;
 extern size_t ntasks;
+extern struct tc *tcs;
+extern size_t ntcs;
 
 extern const char *fname;
 extern size_t line;

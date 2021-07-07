@@ -24,11 +24,9 @@ void parse(const char *path) {
 	static char buf[LINE_MAX], s1[LINE_MAX], s2[LINE_MAX];
 	char *p;
 	FILE *f;
+	enum {NONE, TASK, TOOLCHAIN} state;
 	struct task *task;
-	enum {
-		NONE,
-		TASK,
-	} state;
+	struct tc *tc;
 
 	f = fopen(path, "r");
 	if (!f)
@@ -46,17 +44,26 @@ void parse(const char *path) {
 				varsetp(s1, varexpand(s2));
 				continue;
 			} else if (sscanf(p, "%[^( ] ( %[^)]", s1, s2) == 2) {
-				state = TASK;
-				tasks = xrealloc(tasks, sizeof(*tasks) * ++ntasks);
-				task = tasks + ntasks - 1;
-				*task = (struct task){0};
-				task->name = xstrdup(s2);
-				for (size_t i = 1; i < LEN(tasktypes); i++)
-					if (!strcmp(s1, tasktypes[i]))
-						task->type = i;
-				if (!task->type)
-					err("Invalid task type '%s'", s1);
-				continue;
+				if (!strcmp(s1, "toolchain")) {
+					state = TOOLCHAIN;
+					tcs = xrealloc(tcs, sizeof(*tcs) * ++ntcs);
+					tc = &tcs[ntcs-1];
+					*tc = (struct tc){0};
+					tc->name = xstrdup(s2);
+					continue;
+				} else {
+					state = TASK;
+					tasks = xrealloc(tasks, sizeof(*tasks) * ++ntasks);
+					task = &tasks[ntasks-1];
+					*task = (struct task){0};
+					task->name = xstrdup(s2);
+					for (size_t i = 1; i < LEN(tasktypes); i++)
+						if (!strcmp(s1, tasktypes[i]))
+							task->type = i;
+					if (!task->type)
+						err("Invalid task type '%s'", s1);
+					continue;
+				}
 			}
 		} else {
 			if (sscanf(p, "%[^: ] : %[^\n]", s1, s2) == 2) {
@@ -67,6 +74,20 @@ void parse(const char *path) {
 						loadarr(&task->libs, &task->nlibs, s2);
 					else
 						err("Invalid task variable '%s'", s1);
+					continue;
+				} else if (state == TOOLCHAIN) {
+					if (!strcmp(s1, "find"))
+						loadarr(&tc->find, &tc->nfind, s2);
+					else if (!strcmp(s1, "objext"))
+						tc->objext = xstrdup(s2);
+					else if (!strcmp(s1, "libprefix"))
+						tc->libprefix = xstrdup(s2);
+					else if (!strcmp(s1, "compile"))
+						tc->compile = xstrdup(s2);
+					else if (!strcmp(s1, "linkexe"))
+						tc->linkexe = xstrdup(s2);
+					else
+						err("Invalid toolchain variable '%s'", s1);
 					continue;
 				}
 			}

@@ -6,26 +6,8 @@ const char *tasktypes[] = {0, "exe", "lib", "dll"};
 
 struct task *tasks;
 size_t ntasks;
-
-static struct tc {
-	char *name;
-	char *objext, *libprefix;
-	char **find;
-	char *compile, *linkexe;
-} tcs[] = {
-#ifdef _WIN32
-	{
-		"msvc", ".obj", "/DEFAULTLIB:", (char*[]){"cl", "link", 0},
-		"\"$CL\" /nologo /c /Fo:$out $in",
-		"\"$LINK\" /NOLOGO $lib /OUT:$out $in",
-	},
-#endif
-	{
-		"gcc", ".o", "-l", (char*[]){"gcc", 0},
-		"\"$GCC\" -c -o $out $in",
-		"\"$GCC\" -o $out $in $lib",
-	},
-};
+struct tc *tcs;
+size_t ntcs;
 
 int main(int argc, char *argv[]) {
 	(void)argc;
@@ -39,12 +21,12 @@ int main(int argc, char *argv[]) {
 	hostsetvars();
 	parse("build.dale");
 
-	for (size_t i = 0; i < LEN(tcs); i++) {
-		for (size_t j = 0; tcs[i].find[j]; j++) {
+	for (size_t i = 0; i < ntcs; i++) {
+		for (size_t j = 0; j < tcs[i].nfind; j++) {
 			p = hostfind(tcs[i].find[j]);
 			if (p) {
 				varset(upperstr(tcs[i].find[j]), p);
-				if (!tcs[i].find[j+1])
+				if (j+1 == tcs[i].nfind)
 					tc = &tcs[i];
 			} else {
 				for (size_t k = j; k;) {
@@ -61,7 +43,7 @@ int main(int argc, char *argv[]) {
 	}
 	if (!tc) {
 		fputs("Error: No valid toolchain found (tried:", stderr);
-		for (size_t i = 0; i < LEN(tcs); i++)
+		for (size_t i = 0; i < ntcs; i++)
 			fprintf(stderr, " %s", tcs[i].name);
 		fputs(")\n", stderr);
 		return 1;
