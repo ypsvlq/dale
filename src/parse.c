@@ -42,7 +42,10 @@ void parse(const char *path) {
 		if (*p == '\n' || *p == '#')
 			continue;
 		if (buf == p) {
-			if (sscanf(p, "%[^( ] ( %[^)]", s1, s2) == 2) {
+			if (sscanf(p, "%[^= ] = %[^\n]", s1, s2) == 2) {
+				varsetp(s1, varexpand(s2));
+				continue;
+			} else if (sscanf(p, "%[^( ] ( %[^)]", s1, s2) == 2) {
 				state = TASK;
 				tasks = xrealloc(tasks, sizeof(*tasks) * ++ntasks);
 				task = tasks + ntasks - 1;
