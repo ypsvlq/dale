@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include "dale.h"
 
 #define BUCKETS 1000
@@ -84,6 +85,7 @@ char *varexpand(const char *str) {
 
 	char *out, *p, *p2;
 	size_t len, sz, depth;
+	bool negate;
 
 	out = NULL;
 	len = 0;
@@ -108,6 +110,11 @@ char *varexpand(const char *str) {
 					str++;
 					break;
 				}
+			}
+			if (type == COND) {
+				negate = *str == '!';
+				if (negate)
+					str++;
 			}
 			sz = strspn(str, valid);
 			p = xstrndup(str, sz);
@@ -137,7 +144,7 @@ char *varexpand(const char *str) {
 				}
 				p = xstrndup(str, sz-1);
 				str += sz;
-				if (p2 && *p2 == '1') {
+				if ((!negate && p2 && *p2 == '1') || (negate && (!p2 || *p2 != '1'))) {
 					p2 = varexpand(p);
 					sz = strlen(p2);
 					out = xrealloc(out, len+sz);
