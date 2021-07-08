@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "dale.h"
 
 const char *tasktypes[] = {0, "exe", "lib", "dll"};
@@ -68,7 +69,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	parsea(builtin, LEN(builtin));
-	parsef("build.dale");
+	parsef("local.dale", false);
+	parsef("build.dale", true);
 
 	for (size_t i = 0; i < ntcs; i++) {
 		if (!tcs[i].find || !tcs[i].objext || !tcs[i].libprefix || !tcs[i].compile || !tcs[i].linkexe) {

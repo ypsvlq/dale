@@ -5,6 +5,7 @@
 #endif
 #include <stddef.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #define LEN(x) (sizeof(x) / sizeof(*x))
 
@@ -49,7 +50,7 @@ int asprintf(char **outp, const char *fmt, ...);
 char *upperstr(const char *s);
 
 void parsea(const char *arr[], size_t len);
-void parsef(const char *path);
+void parsef(const char *path, bool required);
 
 void varset(char *name, char *val);
 void varsetp(const char *name, char *val);

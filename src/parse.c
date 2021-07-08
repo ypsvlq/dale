@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "dale.h"
 
 #define LINE_MAX 2048
@@ -115,10 +116,13 @@ static const char *readf(void *data) {
 	return fgets(buf, LINE_MAX, f);
 }
 
-void parsef(const char *path) {
+void parsef(const char *path, bool required) {
 	FILE *f = f = fopen(path, "r");
-	if (!f)
-		err("Could not open '%s'", path);
+	if (!f) {
+		if (required)
+			err("Could not open '%s'", path);
+		return;
+	}
 	fname = path;
 	parse(readf, f);
 	if (ferror(f))
