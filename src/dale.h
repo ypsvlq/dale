@@ -20,6 +20,7 @@ struct task {
 	size_t nsrcs;
 	char **libs;
 	size_t nlibs;
+	bool build;
 };
 
 struct tc {

@@ -34,6 +34,8 @@ int main(int argc, char *argv[]) {
 	int skip;
 	size_t sz;
 	size_t taskn = 1;
+	char **want = NULL;
+	size_t nwant = 0;
 	char *fflag = "build.dale";
 	char *lflag = "local.dale";
 	char *bflag = "build";
@@ -47,7 +49,7 @@ int main(int argc, char *argv[]) {
 				case 'h':
 				case '?':
 					printf(
-						"usage: %s [options] [var=value]...\n"
+						"usage: %s [options] [var=value]... [task]...\n"
 						"\n"
 						"options:\n"
 						"  -h         Show this help\n"
@@ -73,6 +75,9 @@ int main(int argc, char *argv[]) {
 			p = xstrndup(argv[i], sz);
 			p2 = xstrdup(argv[i] + sz + 1);
 			varset(p, p2);
+		} else {
+			want = xrealloc(want, sizeof(*want) * ++nwant);
+			want[nwant-1] = argv[i];
 		}
 	}
 
@@ -113,10 +118,24 @@ int main(int argc, char *argv[]) {
 	}
 	printf("Using toolchain '%s'\n", tc->name);
 
+	for (size_t i = 0; i < nwant; i++) {
+		for (size_t j = 0; j < ntasks; j++) {
+			if (!strcmp(tasks[j].name, want[i])) {
+				tasks[j].build = true;
+				goto wantfound;
+			}
+		}
+		err("Unknown task '%s'", want[i]);
+wantfound:;
+	}
+
 	if (tasks) {
 		hostmkdir(bflag);
 		for (size_t i = 0; i < ntasks; i++) {
-			printf("[%zu/%zu] %s\n", taskn++, ntasks, tasks[i].name);
+			if (nwant && !tasks[i].build)
+				continue;
+
+			printf("[%zu/%zu] %s\n", taskn++, nwant ? nwant : ntasks, tasks[i].name);
 			varsetd("task", tasks[i].name);
 
 			skip = asprintf(&p, "%s/%s_obj", bflag, tasks[i].name);
