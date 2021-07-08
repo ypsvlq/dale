@@ -34,26 +34,39 @@ int main(int argc, char *argv[]) {
 	int skip;
 	size_t sz;
 	size_t taskn = 1;
+	char *fflag = "build.dale";
+	char *lflag = "local.dale";
+	char *bflag = "build";
 
 	hostinit();
 	hostsetvars();
 
 	for (int i = 1; i < argc; i++) {
 		if (argv[i][0] == '-') {
-			for (int j = 1; argv[i][j]; j++) {
-				switch (argv[i][j]) {
-					case 'h':
-					case '?':
-						printf(
-							"usage: %s [options] [var=value]...\n"
-							"\n"
-							"options:\n"
-							"  -h    Show this help\n"
-						, argv[0]);
-						return 0;
-					default:
-						err("Unknown option '%s'", argv[i]);
-				}
+			switch (argv[i][1]) {
+				case 'h':
+				case '?':
+					printf(
+						"usage: %s [options] [var=value]...\n"
+						"\n"
+						"options:\n"
+						"  -h         Show this help\n"
+						"  -f <file>  Set buildscript name (default: build.dale)\n"
+						"  -l <file>  Set localscript name (default: local.dale)\n"
+						"  -b <dir>   Set build directory (default: build)\n"
+					, argv[0]);
+					return 0;
+				case 'f':
+					fflag = argv[++i];
+					break;
+				case 'l':
+					lflag = argv[++i];
+					break;
+				case 'b':
+					bflag = argv[++i];
+					break;
+				default:
+					err("Unknown option '%s'", argv[i]);
 			}
 		} else if (strchr(argv[i], '=')) {
 			sz = strcspn(argv[i], "=");
@@ -64,8 +77,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	parsea(builtin, LEN(builtin));
-	parsef("local.dale", false);
-	parsef("build.dale", true);
+	parsef(lflag, false);
+	parsef(fflag, true);
 
 	for (size_t i = 0; i < ntcs; i++) {
 		if (!tcs[i].find || !tcs[i].objext || !tcs[i].libprefix || !tcs[i].compile || !tcs[i].linkexe) {
@@ -101,16 +114,16 @@ int main(int argc, char *argv[]) {
 	printf("Using toolchain '%s'\n", tc->name);
 
 	if (tasks) {
-		hostmkdir("build");
+		hostmkdir(bflag);
 		for (size_t i = 0; i < ntasks; i++) {
 			printf("[%zu/%zu] %s\n", taskn++, ntasks, tasks[i].name);
 			varsetd("task", tasks[i].name);
 
-			skip = asprintf(&p, "build/%s_obj", tasks[i].name);
+			skip = asprintf(&p, "%s/%s_obj", bflag, tasks[i].name);
 			hostmkdir(p);
 			free(p);
 			for (size_t j = 0; j < tasks[i].nsrcs; j++) {
-				asprintf(&p, "build/%s_obj/%s", tasks[i].name, tasks[i].srcs[j]);
+				asprintf(&p, "%s/%s_obj/%s", bflag, tasks[i].name, tasks[i].srcs[j]);
 				for (p2 = p + skip + 1; *p2; p2++) {
 					if (*p2 == '/') {
 						*p2 = 0;
@@ -125,7 +138,7 @@ int main(int argc, char *argv[]) {
 			for (size_t j = 0; j < tasks[i].nsrcs; j++) {
 				printf("=> Compiling %s\n", tasks[i].srcs[j]);
 				varsetd("in", tasks[i].srcs[j]);
-				asprintf(&p, "build/%s_obj/%s%s", tasks[i].name, tasks[i].srcs[j], tc->objext);
+				asprintf(&p, "%s/%s_obj/%s%s", bflag, tasks[i].name, tasks[i].srcs[j], tc->objext);
 				varsetp("out", p);
 				asprintf(&p3, "%s %s", p2, p);
 				free(p2);
@@ -138,7 +151,7 @@ int main(int argc, char *argv[]) {
 			}
 
 			varsetp("in", p2);
-			asprintf(&p, "build/%s", tasks[i].name);
+			asprintf(&p, "%s/%s", bflag, tasks[i].name);
 			printf("=> Linking %s\n", p);
 			varsetp("out", p);
 			p = xstrdup("");
