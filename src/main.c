@@ -10,14 +10,14 @@ static const char *builtin[] = {
 "	find: cl link",
 "	objext: .obj",
 "	libprefix: /DEFAULTLIB:",
-"	compile: \"$CL\" /nologo /c /Fo:$out $in",
-"	linkexe: \"$LINK\" /NOLOGO $lib /OUT:$out.exe $in",
+"	compile: \"$CL\" /MD$[debug d /Zi /Fd:build/$task] $[optfast /O2] $[optsize /O1] /nologo /c /Fo:$out $in",
+"	linkexe: \"$LINK\" $[debug /DEBUG] /NOLOGO $lib /OUT:$out.exe $in",
 #endif
 "toolchain(gcc)",
 "	find: gcc",
 "	objext: .o",
 "	libprefix: -l",
-"	compile: \"$GCC\" -c -o $out $in",
+"	compile: \"$GCC\" $[debug -g] $[optfast -O3] $[optsize -Os] -c -o $out $in",
 "	linkexe: \"$GCC\" -o $out $in $lib",
 };
 
@@ -27,9 +27,6 @@ struct tc *tcs;
 size_t ntcs;
 
 int main(int argc, char *argv[]) {
-	(void)argc;
-	(void)argv;
-
 	char *p, *p2, *p3;
 	struct tc *tc = NULL;
 	int skip;
@@ -37,6 +34,39 @@ int main(int argc, char *argv[]) {
 
 	hostinit();
 	hostsetvars();
+
+	for (int i = 1; i < argc; i++) {
+		if (argv[i][0] == '-') {
+			for (int j = 1; argv[i][j]; j++) {
+				switch (argv[i][j]) {
+					case 'h':
+					case '?':
+						printf(
+							"usage: %s [options]\n"
+							"\n"
+							"options:\n"
+							"  -h    Show this help\n"
+							"  -g    Include debugging information\n"
+							"  -O    Optimise for speed\n"
+							"  -S    Optimise for size\n"
+						, argv[0]);
+						return 0;
+					case 'g':
+						varsetd("debug", "1");
+						break;
+					case 'O':
+						varsetd("optfast", "1");
+						break;
+					case 'S':
+						varsetd("optsize", "1");
+						break;
+					default:
+						err("Unknown option '%s'", argv[i]);
+				}
+			}
+		}
+	}
+
 	parsea(builtin, LEN(builtin));
 	parsef("build.dale");
 
@@ -77,6 +107,7 @@ int main(int argc, char *argv[]) {
 		hostmkdir("build");
 		for (size_t i = 0; i < ntasks; i++) {
 			printf("[%zu/%zu] %s\n", taskn++, ntasks, tasks[i].name);
+			varsetd("task", tasks[i].name);
 
 			skip = asprintf(&p, "build/%s_obj", tasks[i].name);
 			hostmkdir(p);
@@ -126,6 +157,8 @@ int main(int argc, char *argv[]) {
 			varunset("in");
 			varunset("out");
 			varunset("lib");
+
+			varunset("task");
 		}
 	}
 
