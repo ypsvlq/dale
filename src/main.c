@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include "dale.h"
 
 const char *tasktypes[] = {0, "exe", "lib", "dll"};
@@ -31,6 +32,7 @@ int main(int argc, char *argv[]) {
 	char *p, *p2, *p3;
 	struct tc *tc = NULL;
 	int skip;
+	size_t sz;
 	size_t taskn = 1;
 
 	hostinit();
@@ -43,28 +45,21 @@ int main(int argc, char *argv[]) {
 					case 'h':
 					case '?':
 						printf(
-							"usage: %s [options]\n"
+							"usage: %s [options] [var=value]...\n"
 							"\n"
 							"options:\n"
 							"  -h    Show this help\n"
-							"  -g    Include debugging information\n"
-							"  -O    Optimise for speed\n"
-							"  -S    Optimise for size\n"
 						, argv[0]);
 						return 0;
-					case 'g':
-						varsetd("debug", "1");
-						break;
-					case 'O':
-						varsetd("optfast", "1");
-						break;
-					case 'S':
-						varsetd("optsize", "1");
-						break;
 					default:
 						err("Unknown option '%s'", argv[i]);
 				}
 			}
+		} else if (strchr(argv[i], '=')) {
+			sz = strcspn(argv[i], "=");
+			p = xstrndup(argv[i], sz);
+			p2 = xstrdup(argv[i] + sz + 1);
+			varset(p, p2);
 		}
 	}
 
