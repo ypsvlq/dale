@@ -57,6 +57,7 @@ void hostquit(void) {
 void hostsetvars(void) {
 	varsetd("target", "windows");
 	varsetd("windows", "1");
+	varsetd("exeext", ".exe");
 }
 
 void hostmkdir(const char *path) {

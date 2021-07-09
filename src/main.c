@@ -13,7 +13,7 @@ static const char *builtin[] = {
 "	objext: .obj",
 "	libprefix: /DEFAULTLIB:",
 "	compile: \"$CL\" /MD$[debug d /Zi /Fd:build/$task] $[optfast /O2] $[optsize /O1] /nologo /c /Fo:$out $in",
-"	linkexe: \"$LINK\" $[debug /DEBUG] /NOLOGO $lib /OUT:$out.exe $in",
+"	linkexe: \"$LINK\" $[debug /DEBUG] /NOLOGO $lib /OUT:$out $in",
 #endif
 "toolchain(gcc)",
 "	find: gcc",
@@ -39,6 +39,7 @@ int main(int argc, char *argv[]) {
 	char *fflag = "build.dale";
 	char *lflag = "local.dale";
 	char *bflag = "build";
+	char *exeext;
 
 	hostinit();
 	hostsetvars();
@@ -118,6 +119,10 @@ int main(int argc, char *argv[]) {
 	}
 	printf("Using toolchain '%s'\n", tc->name);
 
+	exeext = varget("exeext");
+	if (!exeext)
+		exeext = "";
+
 	for (size_t i = 0; i < nwant; i++) {
 		for (size_t j = 0; j < ntasks; j++) {
 			if (!strcmp(tasks[j].name, want[i])) {
@@ -172,7 +177,7 @@ wantfound:;
 				free(p);
 			}
 
-			asprintf(&p, "%s/%s", bflag, tasks[i].name);
+			asprintf(&p, "%s/%s%s", bflag, tasks[i].name, exeext);
 			if (tasks[i].link || !hostfexists(p)) {
 				printf("=> Linking %s\n", p);
 				varsetp("in", p2);
