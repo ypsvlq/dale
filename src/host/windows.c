@@ -58,6 +58,8 @@ void hostsetvars(void) {
 	varsetd("target", "windows");
 	varsetd("windows", "1");
 	varsetd("exeext", ".exe");
+	varsetd("libext", ".lib");
+	varsetd("dllext", ".dll");
 }
 
 void hostmkdir(const char *path) {

@@ -28,7 +28,7 @@ struct tc {
 	char **find;
 	size_t nfind;
 	char *objext, *libprefix;
-	char *compile, *linkexe;
+	char *compile, *linkexe, *linklib, *linkdll;
 };
 
 extern const char *tasktypes[4];

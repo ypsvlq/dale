@@ -81,6 +81,10 @@ void parse(const char *(*read)(void *data), void *data) {
 						tc->compile = xstrdup(s2);
 					else if (!strcmp(s1, "linkexe"))
 						tc->linkexe = xstrdup(s2);
+					else if (!strcmp(s1, "linklib"))
+						tc->linklib = xstrdup(s2);
+					else if (!strcmp(s1, "linkdll"))
+						tc->linkdll = xstrdup(s2);
 					else
 						err("Invalid toolchain variable '%s'", s1);
 					continue;
