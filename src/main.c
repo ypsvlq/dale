@@ -196,6 +196,7 @@ wantfound:;
 				varunset("lib");
 			} else {
 				puts("(nothing to do)");
+				free(p2);
 			}
 			free(p);
 

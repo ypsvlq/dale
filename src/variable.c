@@ -168,7 +168,7 @@ char *varexpand(const char *str) {
 			}
 		}
 	}
-	if (!len)
+	if (!out)
 		out = xstrdup("");
 	else
 		out[len] = '\0';
