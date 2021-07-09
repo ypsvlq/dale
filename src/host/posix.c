@@ -57,3 +57,15 @@ char *hostfind(const char *name) {
 	}
 	return NULL;
 }
+
+bool hostfnewer(const char *path1, const char *path2) {
+	struct stat sb1, sb2;
+	if (stat(path1, &sb1) == -1)
+		err("stat '%s': %s", path1, strerror(errno));
+	if (stat(path2, &sb2) == -1) {
+		if (errno == ENOENT)
+			return true;
+		err("stat '%s': %s", path2, strerror(errno));
+	}
+	return sb1.st_mtim.tv_sec >= sb2.st_mtim.tv_sec;
+}

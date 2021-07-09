@@ -155,37 +155,44 @@ wantfound:;
 
 			p2 = xstrdup("");
 			for (size_t j = 0; j < tasks[i].nsrcs; j++) {
-				printf("=> Compiling %s\n", tasks[i].srcs[j]);
-				varsetd("in", tasks[i].srcs[j]);
 				asprintf(&p, "%s/%s_obj/%s%s", bflag, tasks[i].name, tasks[i].srcs[j], tc->objext);
-				varsetp("out", p);
 				asprintf(&p3, "%s %s", p2, p);
 				free(p2);
 				p2 = p3;
-				p = varexpand(tc->compile);
+				if (hostfnewer(tasks[i].srcs[j], p)) {
+					tasks[i].link = true;
+					printf("=> Compiling %s\n", tasks[i].srcs[j]);
+					varsetd("in", tasks[i].srcs[j]);
+					varsetp("out", p);
+					p = varexpand(tc->compile);
+					system(p);
+					varunset("in");
+					varunset("out");
+				}
+				free(p);
+			}
+
+			if (tasks[i].link) {
+				varsetp("in", p2);
+				asprintf(&p, "%s/%s", bflag, tasks[i].name);
+				printf("=> Linking %s\n", p);
+				varsetp("out", p);
+				p = xstrdup("");
+				for (size_t j = 0; j < tasks[i].nlibs; j++) {
+					asprintf(&p2, "%s %s%s", p, tc->libprefix, tasks[i].libs[j]);
+					free(p);
+					p = p2;
+				}
+				varsetp("lib", p);
+				p = varexpand(tc->linkexe);
 				system(p);
 				free(p);
 				varunset("in");
 				varunset("out");
+				varunset("lib");
+			} else {
+				puts("(nothing to do)");
 			}
-
-			varsetp("in", p2);
-			asprintf(&p, "%s/%s", bflag, tasks[i].name);
-			printf("=> Linking %s\n", p);
-			varsetp("out", p);
-			p = xstrdup("");
-			for (size_t j = 0; j < tasks[i].nlibs; j++) {
-				asprintf(&p2, "%s %s%s", p, tc->libprefix, tasks[i].libs[j]);
-				free(p);
-				p = p2;
-			}
-			varsetp("lib", p);
-			p = varexpand(tc->linkexe);
-			system(p);
-			free(p);
-			varunset("in");
-			varunset("out");
-			varunset("lib");
 
 			varunset("task");
 		}

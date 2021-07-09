@@ -20,7 +20,7 @@ struct task {
 	size_t nsrcs;
 	char **libs;
 	size_t nlibs;
-	bool build;
+	bool build, link;
 };
 
 struct tc {
@@ -65,3 +65,4 @@ void hostquit(void);
 void hostsetvars(void);
 void hostmkdir(const char *path);
 char *hostfind(const char *name);
+bool hostfnewer(const char *path1, const char *path2);
