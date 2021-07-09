@@ -120,3 +120,15 @@ bool hostfnewer(const char *path1, const char *path2) {
 	free(wpath2);
 	return (CompareFileTime(&t1, &t2) > -1);
 }
+
+bool hostfexists(const char *path) {
+	PWSTR wpath;
+	HANDLE f;
+	wpath = mbtows(path);
+	f = CreateFileW(wpath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (f == INVALID_HANDLE_VALUE && GetLastError() != ERROR_FILE_NOT_FOUND)
+		err("Could not open '%s': %s", path, winerr());
+	CloseHandle(f);
+	free(wpath);
+	return f != INVALID_HANDLE_VALUE;
+}
