@@ -12,7 +12,7 @@ static const char *builtin[] = {
 "	find: cl link lib",
 "	objext: .obj",
 "	libprefix: /DEFAULTLIB:",
-"	compile: \"$CL\" /M$[!msvc_staticcrt D]$[msvc_staticcrt T]$[dll  /LD]$[debug d /Zi /Fd:build/$task] $[dll /LD] $[optfast /O2] $[optsize /O1] /nologo /c /Fo:$out $in",
+"	compile: \"$CL\" /M$[!msvc_staticcrt D]$[msvc_staticcrt T]$[dll  /LD]$[debug d /Zi /Fd:build/$task] $[optfast /O2] $[optsize /O1] /nologo /c /Fo:$out $in",
 "	linkexe: \"$LINK\" $[debug /DEBUG] /NOLOGO $lib /OUT:$out $in",
 "	linklib: \"$LIB\" /NOLOGO /OUT:$out $in",
 "	linkdll: \"$LINK\" $[debug /DEBUG] /NOLOGO /DLL $lib /OUT:$out $in",
