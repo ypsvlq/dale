@@ -91,3 +91,32 @@ char *hostfind(const char *name) {
 	free(wpath);
 	return NULL;
 }
+
+bool hostfnewer(const char *path1, const char *path2) {
+	PWSTR wpath1, wpath2;
+	HANDLE f1, f2;
+	FILETIME t1, t2;
+	wpath1 = mbtows(path1);
+	wpath2 = mbtows(path2);
+	f1 = CreateFileW(wpath1, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (f1 == INVALID_HANDLE_VALUE)
+		err("Could not open '%s': %s", path1, winerr());
+	f2 = CreateFileW(wpath2, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (f2 == INVALID_HANDLE_VALUE) {
+		if (GetLastError() == ERROR_FILE_NOT_FOUND) {
+			CloseHandle(f1);
+			free(wpath1);
+			free(wpath2);
+			return true;
+		} else {
+			err("Could not open '%s': %s", path2, winerr());
+		}
+	}
+	GetFileTime(f1, NULL, NULL, &t1);
+	GetFileTime(f2, NULL, NULL, &t2);
+	CloseHandle(f1);
+	CloseHandle(f2);
+	free(wpath1);
+	free(wpath2);
+	return (CompareFileTime(&t1, &t2) > -1);
+}
