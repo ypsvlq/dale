@@ -76,7 +76,7 @@ char *varget(const char *name) {
 	for (struct var *var = tbl[idx]; var; var = var->next)
 		if (!strcmp(var->name, name))
 			return var->val;
-	return NULL;
+	return "";
 }
 
 char *varexpand(const char *str) {
@@ -155,8 +155,8 @@ char *varexpand(const char *str) {
 				free(p);
 				continue;
 			}
-			if (p2) {
-				sz = strlen(p2);
+			sz = strlen(p2);
+			if (sz) {
 				out = xrealloc(out, len+sz+1);
 				memcpy(out+len, p2, sz);
 				len += sz;

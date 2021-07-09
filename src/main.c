@@ -124,14 +124,8 @@ int main(int argc, char *argv[]) {
 	printf("Using toolchain '%s'\n", tc->name);
 
 	exeext = varget("exeext");
-	if (!exeext)
-		exeext = "";
 	libext = varget("libext");
-	if (!libext)
-		libext = "";
 	dllext = varget("dllext");
-	if (!dllext)
-		dllext = "";
 
 	for (size_t i = 0; i < nwant; i++) {
 		for (size_t j = 0; j < ntasks; j++) {
