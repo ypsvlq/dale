@@ -66,3 +66,4 @@ void hostsetvars(void);
 void hostmkdir(const char *path);
 char *hostfind(const char *name);
 bool hostfnewer(const char *path1, const char *path2);
+bool hostfexists(const char *path);

@@ -172,10 +172,10 @@ wantfound:;
 				free(p);
 			}
 
-			if (tasks[i].link) {
-				varsetp("in", p2);
-				asprintf(&p, "%s/%s", bflag, tasks[i].name);
+			asprintf(&p, "%s/%s", bflag, tasks[i].name);
+			if (tasks[i].link || !hostfexists(p)) {
 				printf("=> Linking %s\n", p);
+				varsetp("in", p2);
 				varsetp("out", p);
 				p = xstrdup("");
 				for (size_t j = 0; j < tasks[i].nlibs; j++) {
@@ -186,13 +186,13 @@ wantfound:;
 				varsetp("lib", p);
 				p = varexpand(tc->linkexe);
 				system(p);
-				free(p);
 				varunset("in");
 				varunset("out");
 				varunset("lib");
 			} else {
 				puts("(nothing to do)");
 			}
+			free(p);
 
 			varunset("task");
 		}

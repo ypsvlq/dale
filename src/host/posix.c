@@ -69,3 +69,7 @@ bool hostfnewer(const char *path1, const char *path2) {
 	}
 	return sb1.st_mtim.tv_sec >= sb2.st_mtim.tv_sec;
 }
+
+bool hostfexists(const char *path) {
+	return !access(path, F_OK);
+}
