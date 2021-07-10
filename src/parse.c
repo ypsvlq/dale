@@ -22,11 +22,25 @@ static void loadarr(char ***out, size_t *outsz, char *val) {
 }
 
 void parse(const char *(*read)(void *data), void *data) {
+	static const char *decltypes[] = {0, "task", "toolchain"};
 	static char s1[LINE_MAX], s2[LINE_MAX];
 	const char *buf, *p;
 	enum {NONE, TASK, TOOLCHAIN} state;
 	struct task *task;
 	struct tc *tc;
+	struct vars {
+		struct var {
+			char *name;
+			char **out;
+		} a[7];
+	} vars;
+	struct lists {
+		struct list {
+			char *name;
+			char ***out;
+			size_t *outsz;
+		} a[3];
+	} lists;
 
 	state = NONE;
 	while ((buf = read(data))) {
@@ -45,6 +59,19 @@ void parse(const char *(*read)(void *data), void *data) {
 					tc = &tcs[ntcs-1];
 					*tc = (struct tc){0};
 					tc->name = xstrdup(s2);
+					vars = (struct vars){{
+						{"objext", &tc->objext},
+						{"libprefix", &tc->libprefix},
+						{"compile", &tc->compile},
+						{"linkexe", &tc->linkexe},
+						{"linklib", &tc->linklib},
+						{"linkdll", &tc->linkdll},
+						{0}
+					}};
+					lists = (struct lists){{
+						{"find", &tc->find, &tc->nfind},
+						{0}
+					}};
 					continue;
 				} else {
 					state = TASK;
@@ -57,41 +84,37 @@ void parse(const char *(*read)(void *data), void *data) {
 							task->type = i;
 					if (!task->type)
 						err("Invalid task type '%s'", s1);
+					lists = (struct lists){{
+						{"src", &task->srcs, &task->nsrcs},
+						{"lib", &task->libs, &task->nlibs},
+						{0}
+					}};
 					continue;
 				}
 			}
 		} else {
 			if (sscanf(p, "%[^: ] : %[^\n]", s1, s2) == 2) {
-				if (state == TASK) {
-					if (!strcmp(s1, "src"))
-						loadarr(&task->srcs, &task->nsrcs, s2);
-					else if (!strcmp(s1, "lib"))
-						loadarr(&task->libs, &task->nlibs, s2);
-					else
-						err("Invalid task variable '%s'", s1);
-					continue;
-				} else if (state == TOOLCHAIN) {
-					if (!strcmp(s1, "find"))
-						loadarr(&tc->find, &tc->nfind, s2);
-					else if (!strcmp(s1, "objext"))
-						tc->objext = xstrdup(s2);
-					else if (!strcmp(s1, "libprefix"))
-						tc->libprefix = xstrdup(s2);
-					else if (!strcmp(s1, "compile"))
-						tc->compile = xstrdup(s2);
-					else if (!strcmp(s1, "linkexe"))
-						tc->linkexe = xstrdup(s2);
-					else if (!strcmp(s1, "linklib"))
-						tc->linklib = xstrdup(s2);
-					else if (!strcmp(s1, "linkdll"))
-						tc->linkdll = xstrdup(s2);
-					else
-						err("Invalid toolchain variable '%s'", s1);
-					continue;
+				if (state == TASK || state == TOOLCHAIN) {
+					for (struct list *l = lists.a; l->name; l++) {
+						if (!strcmp(s1, l->name)) {
+							loadarr(l->out, l->outsz, s2);
+							goto assigned;
+						}
+					}
 				}
+				if (state == TOOLCHAIN) {
+					for (struct var *v = vars.a; v->name; v++) {
+						if (!strcmp(s1, v->name)) {
+							*(v->out) = xstrdup(s2);
+							goto assigned;
+						}
+					}
+				}
+				err("Unknown %s variable '%s'", decltypes[state], s1);
 			}
 		}
 		err("Syntax error");
+assigned:;
 	}
 
 	line = 0;
