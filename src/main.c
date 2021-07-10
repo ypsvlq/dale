@@ -21,7 +21,7 @@ static const char *builtin[] = {
 "	find: gcc ar",
 "	objext: .o",
 "	libprefix: -l",
-"	compile: \"$GCC\" $[debug -g] $[optfast -O3] $[optsize -Os] -c -o $out $in",
+"	compile: \"$GCC\" $[debug -g] $[optfast -O3] $[optsize -Os] $[lib -fPIC] $[dll -fPIC] -c -o $out $in",
 "	linkexe: \"$GCC\" -o $out $in $lib",
 "	linklib: \"$AR\" -rc $out $in",
 "	linkdll: \"$GCC\" -shared -o $out $in $lib",
