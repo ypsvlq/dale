@@ -90,7 +90,8 @@ int main(int argc, char *argv[]) {
 	parsef(lflag, false);
 	parsef(fflag, true);
 
-	for (size_t i = 0; i < ntcs; i++) {
+	for (size_t i = ntcs; i;) {
+		i--;
 		if (!tcs[i].find || !tcs[i].objext || !tcs[i].libprefix || !tcs[i].compile || !tcs[i].linkexe) {
 			fprintf(stderr, "Warning: Skipping underspecified toolchain '%s'\n", tcs[i].name);
 			continue;
