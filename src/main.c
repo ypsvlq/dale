@@ -42,8 +42,8 @@ int main(int argc, char *argv[]) {
 	size_t nwant = 0;
 	char *fflag = "build.dale";
 	char *lflag = "local.dale";
-	char *bflag = "build";
-	char *tflag = NULL;
+	int pflag = 0;
+	char *bdir, *tcname;
 	char *exeext, *libext, *dllext;
 
 	hostinit();
@@ -60,8 +60,7 @@ int main(int argc, char *argv[]) {
 						"  -h         Show this help\n"
 						"  -f <file>  Set buildscript name (default: build.dale)\n"
 						"  -l <file>  Set localscript name (default: local.dale)\n"
-						"  -b <dir>   Set build directory (default: build)\n"
-						"  -t <name>  Set toolchain\n"
+						"  -p         Process following var=value args after localscript\n"
 					, argv[0]);
 					return 0;
 				case 'f':
@@ -70,20 +69,19 @@ int main(int argc, char *argv[]) {
 				case 'l':
 					lflag = argv[++i];
 					break;
-				case 'b':
-					bflag = argv[++i];
-					break;
-				case 't':
-					tflag = argv[++i];
+				case 'p':
+					pflag = i+1;
 					break;
 				default:
 					err("Unknown option '%s'", argv[i]);
 			}
 		} else if (strchr(argv[i], '=')) {
-			sz = strcspn(argv[i], "=");
-			p = xstrndup(argv[i], sz);
-			p2 = xstrdup(argv[i] + sz + 1);
-			varset(p, p2);
+			if (!pflag) {
+				sz = strcspn(argv[i], "=");
+				p = xstrndup(argv[i], sz);
+				p2 = xstrdup(argv[i] + sz + 1);
+				varset(p, p2);
+			}
 		} else {
 			want = xrealloc(want, sizeof(*want) * ++nwant);
 			want[nwant-1] = argv[i];
@@ -91,15 +89,33 @@ int main(int argc, char *argv[]) {
 	}
 
 	parsef(lflag, false);
+
+	if (pflag) {
+		for (int i = pflag; i < argc; i++) {
+			if (strchr(argv[i], '=')) {
+				sz = strcspn(argv[i], "=");
+				p = xstrndup(argv[i], sz);
+				p2 = xstrdup(argv[i] +  sz + 1);
+				varset(p, p2);
+			}
+		}
+	}
+
 	if (*varget("nodefvar") != '1')
 		hostsetvars();
 	if (*varget("nodeftc") != '1')
 		parsea(builtin, LEN(builtin));
+
+	bdir = vargetnull("bdir");
+	if (!bdir)
+		bdir = "build";
+	tcname = vargetnull("tcname");
+
 	parsef(fflag, true);
 
 	for (size_t i = ntcs; i;) {
 		i--;
-		if (tflag && strcmp(tcs[i].name, tflag))
+		if (tcname && strcmp(tcs[i].name, tcname))
 			continue;
 		if (!tcs[i].find || !tcs[i].objext || !tcs[i].libprefix || !tcs[i].compile || !tcs[i].linkexe) {
 			fprintf(stderr, "Warning: Skipping underspecified toolchain '%s'\n", tcs[i].name);
@@ -125,10 +141,10 @@ int main(int argc, char *argv[]) {
 			break;
 	}
 	if (!tc) {
-		if (!tflag)
+		if (!tcname)
 			fputs("Error: No valid toolchain found (tried:", stderr);
 		else
-			fprintf(stderr, "Error: Unknown toolchain '%s' (known:", tflag);
+			fprintf(stderr, "Error: Unknown toolchain '%s' (known:", tcname);
 		for (size_t i = 0; i < ntcs; i++)
 			fprintf(stderr, " %s", tcs[i].name);
 		fputs(")\n", stderr);
@@ -152,7 +168,7 @@ wantfound:;
 	}
 
 	if (tasks) {
-		hostmkdir(bflag);
+		hostmkdir(bdir);
 		for (size_t i = 0; i < ntasks; i++) {
 			if (nwant && !tasks[i].build)
 				continue;
@@ -163,11 +179,11 @@ wantfound:;
 			varsetd("lib", tasks[i].type == LIB ? "1" : "0");
 			varsetd("dll", tasks[i].type == DLL ? "1" : "0");
 
-			skip = asprintf(&p, "%s/%s_obj", bflag, tasks[i].name);
+			skip = asprintf(&p, "%s/%s_obj", bdir, tasks[i].name);
 			hostmkdir(p);
 			free(p);
 			for (size_t j = 0; j < tasks[i].nsrcs; j++) {
-				asprintf(&p, "%s/%s_obj/%s", bflag, tasks[i].name, tasks[i].srcs[j]);
+				asprintf(&p, "%s/%s_obj/%s", bdir, tasks[i].name, tasks[i].srcs[j]);
 				for (p2 = p + skip + 1; *p2; p2++) {
 					if (*p2 == '/') {
 						*p2 = 0;
@@ -180,7 +196,7 @@ wantfound:;
 
 			p2 = xstrdup("");
 			for (size_t j = 0; j < tasks[i].nsrcs; j++) {
-				asprintf(&p, "%s/%s_obj/%s%s", bflag, tasks[i].name, tasks[i].srcs[j], tc->objext);
+				asprintf(&p, "%s/%s_obj/%s%s", bdir, tasks[i].name, tasks[i].srcs[j], tc->objext);
 				asprintf(&p3, "%s %s", p2, p);
 				free(p2);
 				p2 = p3;
@@ -211,7 +227,7 @@ wantfound:;
 					p4 = dllext;
 					break;
 			}
-			asprintf(&p, "%s/%s%s", bflag, tasks[i].name, p4);
+			asprintf(&p, "%s/%s%s", bdir, tasks[i].name, p4);
 			if (tasks[i].link || !hostfexists(p)) {
 				printf("=> Linking %s\n", p);
 				varsetp("in", p2);
