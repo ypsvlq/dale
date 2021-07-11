@@ -47,7 +47,6 @@ int main(int argc, char *argv[]) {
 	char *exeext, *libext, *dllext;
 
 	hostinit();
-	hostsetvars();
 
 	for (int i = 1; i < argc; i++) {
 		if (argv[i][0] == '-') {
@@ -91,8 +90,11 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	parsea(builtin, LEN(builtin));
 	parsef(lflag, false);
+	if (*varget("nodefvar") != '1')
+		hostsetvars();
+	if (*varget("nodeftc") != '1')
+		parsea(builtin, LEN(builtin));
 	parsef(fflag, true);
 
 	for (size_t i = ntcs; i;) {
