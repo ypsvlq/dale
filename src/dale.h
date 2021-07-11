@@ -58,6 +58,7 @@ void varsetp(const char *name, char *val);
 void varsetd(const char *name, const char *val);
 void varunset(const char *name);
 char *varget(const char *name);
+char *vargetnull(const char *name);
 char *varexpand(const char *str);
 
 void hostinit(void);

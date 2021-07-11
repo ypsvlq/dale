@@ -79,6 +79,14 @@ char *varget(const char *name) {
 	return "";
 }
 
+char *vargetnull(const char *name) {
+	uint32_t idx = getidx(name);
+	for (struct var *var = tbl[idx]; var; var = var->next)
+		if (!strcmp(var->name, name))
+			return var->val;
+	return NULL;
+}
+
 char *varexpand(const char *str) {
 	enum {NONE, NORMAL, COND} type;
 	static const char brackets[] = {0, '(', '['};
