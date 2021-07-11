@@ -43,6 +43,7 @@ int main(int argc, char *argv[]) {
 	char *fflag = "build.dale";
 	char *lflag = "local.dale";
 	char *bflag = "build";
+	char *tflag = NULL;
 	char *exeext, *libext, *dllext;
 
 	hostinit();
@@ -61,6 +62,7 @@ int main(int argc, char *argv[]) {
 						"  -f <file>  Set buildscript name (default: build.dale)\n"
 						"  -l <file>  Set localscript name (default: local.dale)\n"
 						"  -b <dir>   Set build directory (default: build)\n"
+						"  -t <name>  Set toolchain\n"
 					, argv[0]);
 					return 0;
 				case 'f':
@@ -71,6 +73,9 @@ int main(int argc, char *argv[]) {
 					break;
 				case 'b':
 					bflag = argv[++i];
+					break;
+				case 't':
+					tflag = argv[++i];
 					break;
 				default:
 					err("Unknown option '%s'", argv[i]);
@@ -92,6 +97,8 @@ int main(int argc, char *argv[]) {
 
 	for (size_t i = ntcs; i;) {
 		i--;
+		if (tflag && strcmp(tcs[i].name, tflag))
+			continue;
 		if (!tcs[i].find || !tcs[i].objext || !tcs[i].libprefix || !tcs[i].compile || !tcs[i].linkexe) {
 			fprintf(stderr, "Warning: Skipping underspecified toolchain '%s'\n", tcs[i].name);
 			continue;
@@ -116,7 +123,10 @@ int main(int argc, char *argv[]) {
 			break;
 	}
 	if (!tc) {
-		fputs("Error: No valid toolchain found (tried:", stderr);
+		if (!tflag)
+			fputs("Error: No valid toolchain found (tried:", stderr);
+		else
+			fprintf(stderr, "Error: Unknown toolchain '%s' (known:", tflag);
 		for (size_t i = 0; i < ntcs; i++)
 			fprintf(stderr, " %s", tcs[i].name);
 		fputs(")\n", stderr);
