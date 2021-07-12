@@ -43,8 +43,8 @@ int main(int argc, char *argv[]) {
 	char *fflag = "build.dale";
 	char *lflag = "local.dale";
 	int pflag = 0;
-	bool vflag = false;
 	char *bdir, *tcname;
+	bool verbose;
 	char *exeext, *libext, *dllext;
 
 	hostinit();
@@ -73,9 +73,6 @@ int main(int argc, char *argv[]) {
 					break;
 				case 'p':
 					pflag = i+1;
-					break;
-				case 'v':
-					vflag = true;
 					break;
 				default:
 					err("Unknown option '%s'", argv[i]);
@@ -115,6 +112,7 @@ int main(int argc, char *argv[]) {
 	if (!bdir)
 		bdir = "build";
 	tcname = vargetnull("tcname");
+	verbose = vargetnull("verbose");
 
 	parsef(fflag, true);
 
@@ -213,12 +211,12 @@ wantfound:;
 				p2 = p3;
 				if (hostfnewer(tasks[i].srcs[j], p)) {
 					tasks[i].link = true;
-					if (!vflag)
+					if (!verbose)
 						printf("=> Compiling %s\n", tasks[i].srcs[j]);
 					varsetd("in", tasks[i].srcs[j]);
 					varsetp("out", p);
 					p = varexpand(tc->compile);
-					if (vflag)
+					if (verbose)
 						puts(p);
 					system(p);
 					varunset("in");
@@ -243,7 +241,7 @@ wantfound:;
 			}
 			asprintf(&p, "%s/%s%s", bdir, tasks[i].name, p4);
 			if (tasks[i].link || !hostfexists(p)) {
-				if (!vflag)
+				if (!verbose)
 					printf("=> Linking %s\n", p);
 				varsetp("in", p2);
 				varsetp("out", p);
@@ -257,7 +255,7 @@ wantfound:;
 					varsetp("lib", p);
 				}
 				p = varexpand(p3);
-				if (vflag)
+				if (verbose)
 					puts(p);
 				system(p);
 				varunset("in");
