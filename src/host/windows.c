@@ -66,6 +66,7 @@ void hostmkdir(const char *path) {
 	PWSTR wpath = mbtows(path);
 	if (!CreateDirectoryW(wpath, NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
 		err("Could not create directory '%s': %s", path, winerr());
+	free(wpath);
 }
 
 char *hostfind(const char *name) {
