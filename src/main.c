@@ -43,6 +43,7 @@ int main(int argc, char *argv[]) {
 	char *fflag = "build.dale";
 	char *lflag = "local.dale";
 	int pflag = 0;
+	bool vflag = false;
 	char *bdir, *tcname;
 	char *exeext, *libext, *dllext;
 
@@ -61,6 +62,7 @@ int main(int argc, char *argv[]) {
 						"  -f <file>  Set buildscript name (default: build.dale)\n"
 						"  -l <file>  Set localscript name (default: local.dale)\n"
 						"  -p         Process following var=value args after localscript\n"
+						"  -v         Show executed commands\n"
 					, argv[0]);
 					return 0;
 				case 'f':
@@ -71,6 +73,9 @@ int main(int argc, char *argv[]) {
 					break;
 				case 'p':
 					pflag = i+1;
+					break;
+				case 'v':
+					vflag = true;
 					break;
 				default:
 					err("Unknown option '%s'", argv[i]);
@@ -202,10 +207,13 @@ wantfound:;
 				p2 = p3;
 				if (hostfnewer(tasks[i].srcs[j], p)) {
 					tasks[i].link = true;
-					printf("=> Compiling %s\n", tasks[i].srcs[j]);
+					if (!vflag)
+						printf("=> Compiling %s\n", tasks[i].srcs[j]);
 					varsetd("in", tasks[i].srcs[j]);
 					varsetp("out", p);
 					p = varexpand(tc->compile);
+					if (vflag)
+						puts(p);
 					system(p);
 					varunset("in");
 					varunset("out");
@@ -229,7 +237,8 @@ wantfound:;
 			}
 			asprintf(&p, "%s/%s%s", bdir, tasks[i].name, p4);
 			if (tasks[i].link || !hostfexists(p)) {
-				printf("=> Linking %s\n", p);
+				if (!vflag)
+					printf("=> Linking %s\n", p);
 				varsetp("in", p2);
 				varsetp("out", p);
 				if (tasks[i].type != LIB) {
@@ -242,6 +251,8 @@ wantfound:;
 					varsetp("lib", p);
 				}
 				p = varexpand(p3);
+				if (vflag)
+					puts(p);
 				system(p);
 				varunset("in");
 				varunset("out");
