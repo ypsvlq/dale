@@ -151,15 +151,25 @@ static const char *readf(void *data) {
 }
 
 void parsef(const char *path, bool required) {
-	FILE *f = f = fopen(path, "r");
+	FILE *f;
+	char *path2;
+	asprintf(&path2, "%s.dale", path);
+	f = fopen(path2, "r");
 	if (!f) {
-		if (required)
-			err("Could not open '%s'", path);
-		return;
+		f = fopen(path, "r");
+		if (!f) {
+			if (required)
+				err("Could not open '%s'", path);
+			free(path2);
+			return;
+		}
+		fname = path;
+	} else {
+		fname = path2;
 	}
-	fname = path;
 	parse(readf, f);
 	if (ferror(f))
-		err("Failed reading '%s'", path);
+		err("Failed reading '%s'", fname);
 	fclose(f);
+	free(path2);
 }
