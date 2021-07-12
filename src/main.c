@@ -127,12 +127,18 @@ int main(int argc, char *argv[]) {
 			continue;
 		}
 		for (size_t j = 0; j < tcs[i].nfind; j++) {
+			p2 = upperstr(tcs[i].find[j]);
+			if (vargetnull(p2)) {
+				free(p2);
+				continue;
+			}
 			p = hostfind(tcs[i].find[j]);
 			if (p) {
-				varset(upperstr(tcs[i].find[j]), p);
+				varset(p2, p);
 				if (j+1 == tcs[i].nfind)
 					tc = &tcs[i];
 			} else {
+				free(p2);
 				for (size_t k = j; k;) {
 					k--;
 					p = upperstr(tcs[i].find[k]);
