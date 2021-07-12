@@ -71,6 +71,18 @@ void varunset(const char *name) {
 	}
 }
 
+void varupdate(const char *name, char *val) {
+	uint32_t idx = getidx(name);
+	for (struct var *var = tbl[idx]; var; var = var->next) {
+		if (!strcmp(var->name, name)) {
+			free(var->val);
+			var->val = val;
+			return;
+		}
+	}
+	err("Unknown variable '%s'", name);
+}
+
 char *varget(const char *name) {
 	uint32_t idx = getidx(name);
 	for (struct var *var = tbl[idx]; var; var = var->next)
