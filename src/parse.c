@@ -25,6 +25,7 @@ void parse(const char *(*read)(void *data), void *data) {
 	static const char *decltypes[] = {0, "task", "toolchain"};
 	static char s1[LINE_MAX], s2[LINE_MAX];
 	const char *buf, *p;
+	char *p2, *p3;
 	enum {NONE, TASK, TOOLCHAIN} state;
 	struct task *task;
 	struct tc *tc;
@@ -51,6 +52,13 @@ void parse(const char *(*read)(void *data), void *data) {
 		if (buf == p) {
 			if (sscanf(p, "%[^= ] = %[^\n]", s1, s2) == 2) {
 				varsetp(s1, varexpand(s2));
+				continue;
+			} else if (sscanf(p, "%[^+ ] += %[^\n]", s1, s2) == 2) {
+				p2 = varexpand(s2);
+				asprintf(&p3, "%s %s", varget(s1), p2);
+				free(p2);
+				varunset(s1);
+				varsetp(s1, p3);
 				continue;
 			} else if (sscanf(p, "%[^( ] ( %[^)]", s1, s2) == 2) {
 				if (!strcmp(s1, "toolchain")) {
