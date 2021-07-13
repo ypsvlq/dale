@@ -34,6 +34,7 @@ size_t ntcs;
 
 int main(int argc, char *argv[]) {
 	char *p, *p2, *p3, *p4;
+	char **arr;
 	struct tc *tc = NULL;
 	int skip;
 	size_t sz;
@@ -187,6 +188,16 @@ wantfound:;
 			varsetd("exe", tasks[i].type == EXE ? "1" : "0");
 			varsetd("lib", tasks[i].type == LIB ? "1" : "0");
 			varsetd("dll", tasks[i].type == DLL ? "1" : "0");
+
+			arr = tasks[i].srcs;
+			sz = tasks[i].nsrcs;
+			tasks[i].srcs = NULL;
+			tasks[i].nsrcs = 0;
+			for (size_t j = 0; j < sz; j++) {
+				glob(arr[j], &tasks[i].srcs, &tasks[i].nsrcs);
+				free(arr[j]);
+			}
+			free(arr);
 
 			skip = asprintf(&p, "%s/%s_obj", bdir, tasks[i].name);
 			hostmkdir(p);

@@ -50,6 +50,8 @@ char *xstrndup(const char *s, size_t max);
 int asprintf(char **outp, const char *fmt, ...);
 char *upperstr(const char *s);
 
+void glob(char *pattern, char ***out, size_t *outsz);
+
 void parsea(const char *arr[], size_t len);
 void parsef(const char *path, bool required);
 
