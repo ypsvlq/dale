@@ -136,3 +136,59 @@ bool hostfexists(const char *path) {
 	free(wpath);
 	return f != INVALID_HANDLE_VALUE;
 }
+
+struct dir {
+	HANDLE h;
+	WIN32_FIND_DATAW data;
+	char *pattern;
+	bool done;
+};
+
+void *hostdopen(const char *path) {
+	struct dir *d;
+	PWSTR wpattern;
+
+	d = xmalloc(sizeof(*d));
+	asprintf(&d->pattern, "%s/*", path);
+	wpattern = mbtows(d->pattern);
+
+	d->done = false;
+	d->h = FindFirstFileW(wpattern, &d->data);
+	if (d->h == INVALID_HANDLE_VALUE)
+		err("Could not read directory '%s': %s", d->pattern, winerr());
+
+	free(wpattern);
+	return d;
+}
+
+char *hostdread(void *dir) {
+	struct dir *d = dir;
+	char *path;
+
+	if (d->done)
+		return NULL;
+
+	path = wstomb(d->data.cFileName);
+	if (!FindNextFileW(d->h, &d->data)) {
+		if (GetLastError() == ERROR_NO_MORE_FILES)
+			d->done = true;
+		else
+			err("Could not read directory '%s': %s", d->pattern, winerr());
+	}
+
+	return path;
+}
+
+void hostdclose(void *dir) {
+	struct dir *d = dir;
+	FindClose(d->h);
+	free(d->pattern);
+	free(d);
+}
+
+bool hostisdir(const char *path) {
+	PWSTR wpath = mbtows(path);
+	bool ret = GetFileAttributesW(wpath) & FILE_ATTRIBUTE_DIRECTORY;
+	free(wpath);
+	return ret;
+}
