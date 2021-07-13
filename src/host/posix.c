@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <dirent.h>
 #include "../dale.h"
 
 static char **pathdirs;
@@ -74,4 +75,28 @@ bool hostfnewer(const char *path1, const char *path2) {
 
 bool hostfexists(const char *path) {
 	return !access(path, F_OK);
+}
+
+void *hostdopen(const char *path) {
+	return opendir(path);
+}
+
+char *hostdread(void *dir) {
+	struct dirent *ent = readdir(dir);
+	if (!ent)
+		return NULL;
+	if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, ".."))
+		return hostdread(dir);
+	return xstrdup(ent->d_name);
+}
+
+void hostdclose(void *dir) {
+	closedir(dir);
+}
+
+bool hostisdir(const char *path) {
+	struct stat sb;
+	if (stat(path, &sb) == -1)
+		err("stat '%s': %s", path, strerror(errno));
+	return S_ISDIR(sb.st_mode);
 }
