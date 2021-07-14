@@ -45,63 +45,62 @@ static bool match(char *pattern, const char *str) {
 }
 
 void glob(char *pattern, char ***out, size_t *outsz) {
-	char *p, *p2, *p3, *p4, *p5, *p6, *path;
-	void *dir;
+	char *mpattern, *dir, *dirend, *nextdir, *file, *path, *path2;
+	void *d;
 	char **arr;
 	size_t len;
 
-	p = strchr(pattern, '*');
-	if (!p) {
+	mpattern = strchr(pattern, '*');
+	if (!mpattern) {
 		if (hostfexists(pattern)) {
 			*out = xrealloc(*out, sizeof(**out) * ++*outsz);
 			(*out)[*outsz - 1] = xstrdup(pattern);
 		}
 		return;
 	}
-	p2 = strchr(pattern, '/');
-	if (p2 && p2 < p) {
-		while ((p3 = strchr(p2+1, '/')) < p && p3 > p2) {
-			dir = p2;
-			p2 = p3;
-		}
-		p = p2 + 1;
-		*p2 = 0;
+
+	dirend = strchr(pattern, '/');
+	if (dirend && dirend < mpattern) {
+		while ((nextdir = strchr(dirend+1, '/')) < mpattern && nextdir > dirend)
+			dirend = nextdir;
+		mpattern = dirend + 1;
+		*dirend = 0;
 	}
-	path = p2 && !strchr(pattern, '*') ? pattern : ".";
-	dir = hostdopen(path);
-	if (!dir)
+	dir = (dirend && !strchr(pattern, '*')) ? pattern : ".";
+	d = hostdopen(dir);
+	if (!d)
 		return;
 
-	if ((p3 = strchr(p, '/')))
-		*p3 = 0;
+	if ((nextdir = strchr(mpattern, '/')))
+		*nextdir = 0;
 
 	arr = *out;
 	len = *outsz;
 
-	while ((p4 = hostdread(dir))) {
-		if (match(p, p4)) {
-			asprintf(&p5, "%s/%s", path, p4);
-			if (!p3) {
+	while ((file = hostdread(d))) {
+		if (match(mpattern, file)) {
+			asprintf(&path, "%s/%s", dir, file);
+			if (!nextdir) {
 				arr = xrealloc(arr, sizeof(*arr) * ++len);
-				arr[len - 1] = p5;
+				arr[len - 1] = path;
 			} else {
-				if (hostisdir(p5)) {
-					asprintf(&p6, "%s/%s", p5, p3+1);
-					glob(p6, out, outsz);
-					free(p6);
+				if (hostisdir(path)) {
+					asprintf(&path2, "%s/%s", path, nextdir+1);
+					glob(path2, &arr, &len);
+					free(path2);
 				}
-				free(p5);
+				free(path);
 			}
 		}
-		free(p4);
+		free(file);
 	}
 
-	if (p2)
-		*p2 = '/';
-	if (p3)
-		*p3 = '/';
+	hostdclose(d);
 
-	hostdclose(dir);
+	if (dirend)
+		*dirend = '/';
+	if (nextdir)
+		*nextdir = '/';
 
 	qsort(arr+*outsz, len-*outsz, sizeof(*arr), qsortstr);
 	*out = arr;
