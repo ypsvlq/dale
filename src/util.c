@@ -68,3 +68,7 @@ char *upperstr(const char *s) {
 	out[strlen(s)] = 0;
 	return out;
 }
+
+int qsortstr(const void *a, const void *b) {
+	return strcmp(*(const char**)a, *(const char**)b);
+}

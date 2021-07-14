@@ -47,6 +47,8 @@ static bool match(char *pattern, const char *str) {
 void glob(char *pattern, char ***out, size_t *outsz) {
 	char *p, *p2, *p3, *p4, *p5, *p6, *path;
 	void *dir;
+	char **arr;
+	size_t len;
 
 	p = strchr(pattern, '*');
 	if (!p) {
@@ -73,12 +75,15 @@ void glob(char *pattern, char ***out, size_t *outsz) {
 	if ((p3 = strchr(p, '/')))
 		*p3 = 0;
 
+	arr = *out;
+	len = *outsz;
+
 	while ((p4 = hostdread(dir))) {
 		if (match(p, p4)) {
 			asprintf(&p5, "%s/%s", path, p4);
 			if (!p3) {
-				*out = xrealloc(*out, sizeof(**out) * ++*outsz);
-				(*out)[*outsz - 1] = p5;
+				arr = xrealloc(arr, sizeof(*arr) * ++len);
+				arr[len - 1] = p5;
 			} else {
 				if (hostisdir(p5)) {
 					asprintf(&p6, "%s/%s", p5, p3+1);
@@ -97,4 +102,8 @@ void glob(char *pattern, char ***out, size_t *outsz) {
 		*p3 = '/';
 
 	hostdclose(dir);
+
+	qsort(arr+*outsz, len-*outsz, sizeof(*arr), qsortstr);
+	*out = arr;
+	*outsz = len;
 }
