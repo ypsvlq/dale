@@ -3,8 +3,9 @@
 #include "dale.h"
 
 static bool match(char *pattern, const char *str) {
-	char *p, *p2;
+	char *p, *p2, *p3;
 	size_t sz;
+	bool greedy;
 	while (1) {
 		if (!*pattern && !*str) {
 			return true;
@@ -22,21 +23,37 @@ static bool match(char *pattern, const char *str) {
 			pattern++;
 			if (!*pattern)
 				return true;
-			if ((p = strchr(pattern, '*')))
+			greedy = true;
+			if ((p = strchr(pattern, '*'))) {
 				*p = 0;
+				p2 = p + 1;
+				while ((p3 = strchr(p2, '*'))) {
+					*p3 = 0;
+					if (!strcmp(pattern, p2)) {
+						greedy = false;
+						break;
+					}
+					*p3 = '*';
+					p2 = p3 + 1;
+				}
+				if (!strcmp(pattern, p2))
+					greedy = false;
+			}
 			str = strstr(str, pattern);
 			if (!str) {
 				if (p)
 					*p = '*';
 				return false;
 			}
-			sz = strlen(pattern);
-			while (sz && strlen(str) > sz) {
-				p2 = strstr(str + sz, pattern);
-				if (p2)
-					str = p2;
-				else
-					break;
+			if (greedy) {
+				sz = strlen(pattern);
+				while (sz && strlen(str) > sz) {
+					p2 = strstr(str + sz, pattern);
+					if (p2)
+						str = p2;
+					else
+						break;
+				}
 			}
 			if (p)
 				*p = '*';
