@@ -11,6 +11,7 @@ static const char *builtin[] = {
 "toolchain(msvc)",
 "	find: cl link lib",
 "	objext: .obj",
+"	libfmt: $name.lib",
 "	libprefix: /DEFAULTLIB:",
 "	compile: \"$CL\" /M$[!msvc_staticcrt D]$[msvc_staticcrt T]$[dll  /LD]$[debug d /Zi /Fd:build/$task] $[optfast /O2] $[optsize /O1] /nologo /c /Fo:$out $in",
 "	linkexe: \"$LINK\" $[debug /DEBUG] /NOLOGO $lib /OUT:$out $in",
@@ -20,6 +21,7 @@ static const char *builtin[] = {
 "toolchain(gcc)",
 "	find: gcc ar",
 "	objext: .o",
+"	libfmt: lib$name.a",
 "	libprefix: -l",
 "	compile: \"$GCC\" $[debug -g] $[optfast -O3] $[optsize -Os] $[lib -fPIC] $[dll -fPIC] -c -o $out $in",
 "	linkexe: \"$GCC\" -o $out $in $lib",
@@ -46,7 +48,7 @@ int main(int argc, char *argv[]) {
 	int pflag = 0;
 	char *bdir, *tcname;
 	bool verbose;
-	char *exeext, *libext, *dllext;
+	char *exeext, *dllfmt;
 
 	hostinit();
 
@@ -163,8 +165,7 @@ int main(int argc, char *argv[]) {
 	printf("Using toolchain '%s'\n", tc->name);
 
 	exeext = varget("exeext");
-	libext = varget("libext");
-	dllext = varget("dllext");
+	dllfmt = varget("dllfmt");
 
 	for (size_t i = 0; i < nwant; i++) {
 		for (size_t j = 0; j < ntasks; j++) {
@@ -243,14 +244,27 @@ wantfound:;
 					break;
 				case LIB:
 					p3 = tc->linklib;
-					p4 = libext;
+					varsetd("name", tasks[i].name);
+					p4 = varexpand(tc->libfmt);
+					varunset("name");
 					break;
 				case DLL:
 					p3 = tc->linkdll;
-					p4 = dllext;
+					varsetd("name", tasks[i].name);
+					p4 = varexpand(dllfmt);
+					varunset("name");
 					break;
 			}
-			asprintf(&p, "%s/%s%s", bdir, tasks[i].name, p4);
+			switch (tasks[i].type) {
+				case EXE:
+					asprintf(&p, "%s/%s%s", bdir, tasks[i].name, p4);
+					break;
+				case LIB:
+				case DLL:
+					asprintf(&p, "%s/%s", bdir, p4);
+					free(p4);
+					break;
+			}
 			if (tasks[i].link || !hostfexists(p)) {
 				if (!verbose)
 					printf("=> Linking %s\n", p);

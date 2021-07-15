@@ -27,7 +27,7 @@ struct tc {
 	char *name;
 	char **find;
 	size_t nfind;
-	char *objext, *libprefix;
+	char *objext, *libfmt, *libprefix;
 	char *compile, *linkexe, *linklib, *linkdll;
 };
 
