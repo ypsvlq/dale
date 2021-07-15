@@ -230,7 +230,8 @@ wantfound:;
 					p = varexpand(tc->compile);
 					if (verbose)
 						puts(p);
-					system(p);
+					if (system(p))
+						err("Compilation failed");
 					varunset("in");
 					varunset("out");
 				}
@@ -282,7 +283,8 @@ wantfound:;
 				p = varexpand(p3);
 				if (verbose)
 					puts(p);
-				system(p);
+				if (system(p))
+					err("Linking failed");
 				varunset("in");
 				varunset("out");
 				if (tasks[i].type != LIB)
