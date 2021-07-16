@@ -72,3 +72,21 @@ char *upperstr(const char *s) {
 int qsortstr(const void *a, const void *b) {
 	return strcmp(*(const char**)a, *(const char**)b);
 }
+
+char *fmtarr(const char *fmt, char **arr, size_t len) {
+	char *out = NULL, *cur, *tmp;
+	for (size_t i = 0; i < len; i++) {
+		varsetd("name", arr[i]);
+		cur = varexpand(fmt);
+		varunset("name");
+		if (out) {
+			asprintf(&tmp, "%s %s", out, cur);
+			free(cur);
+			free(out);
+			out = tmp;
+		} else {
+			out = cur;
+		}
+	}
+	return out ? out : xstrdup("");
+}

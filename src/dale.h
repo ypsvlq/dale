@@ -52,6 +52,8 @@ char *upperstr(const char *s);
 
 int qsortstr(const void *a, const void *b);
 
+char *fmtarr(const char *fmt, char **arr, size_t len);
+
 void glob(char *pattern, char ***out, size_t *outsz);
 
 void parsea(const char *arr[], size_t len);
