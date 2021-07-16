@@ -302,6 +302,11 @@ wantfound:;
 			free(p);
 
 			varunset("task");
+			varunset("exe");
+			varunset("lib");
+			varunset("dll");
+			varunset("inc");
+			varunset("def");
 		}
 	}
 
