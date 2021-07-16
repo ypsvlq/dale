@@ -11,8 +11,8 @@ static const char *builtin[] = {
 "toolchain(msvc)",
 "	find: cl link lib",
 "	objext: .obj",
-"	libfmt: $name.lib",
-"	libprefix: /DEFAULTLIB:",
+"	libname: $name.lib",
+"	libfmt: /DEFAULTLIB:$name",
 "	incfmt: /I$name",
 "	deffmt: /D$name",
 "	compile: \"$CL\" /M$[!msvc_staticcrt D]$[msvc_staticcrt T]$[dll  /LD]$[debug d /Zi /Fd:build/$task] $[optfast /O2] $[optsize /O1] /nologo $inc $def /c /Fo:$out $in",
@@ -23,8 +23,8 @@ static const char *builtin[] = {
 "toolchain(gcc)",
 "	find: gcc ar",
 "	objext: .o",
-"	libfmt: lib$name.a",
-"	libprefix: -l",
+"	libname: lib$name.a",
+"	libfmt: -l$name",
 "	incfmt: -I$name",
 "	deffmt: -D$name",
 "	compile: \"$GCC\" $[debug -g] $[optfast -O3] $[optsize -Os] $[lib -fPIC] $[dll -fPIC] $inc $def -c -o $out $in",
@@ -34,8 +34,8 @@ static const char *builtin[] = {
 "toolchain(clang)",
 "	find: clang ar",
 "	objext: .o",
-"	libfmt: lib$name.a",
-"	libprefix: -l",
+"	libname: lib$name.a",
+"	libfmt: -l$name",
 "	incfmt: -I$name",
 "	deffmt: -D$name",
 "	compile: \"$CLANG\" $[debug -g] $[optfast -O3] $[optsize -Oz] $[lib -fPIC] $[dll -fPIC] -c -o $out $in",
@@ -138,7 +138,7 @@ int main(int argc, char *argv[]) {
 		i--;
 		if (tcname && strcmp(tcs[i].name, tcname))
 			continue;
-		if (!tcs[i].find || !tcs[i].objext || !tcs[i].libprefix || !tcs[i].compile || !tcs[i].linkexe) {
+		if (!tcs[i].find || !tcs[i].objext || !tcs[i].libname || !tcs[i].compile || !tcs[i].linkexe) {
 			fprintf(stderr, "Warning: Skipping underspecified toolchain '%s'\n", tcs[i].name);
 			continue;
 		}
@@ -263,7 +263,7 @@ wantfound:;
 				case LIB:
 					p3 = tc->linklib;
 					varsetd("name", tasks[i].name);
-					p4 = varexpand(tc->libfmt);
+					p4 = varexpand(tc->libname);
 					varunset("name");
 					break;
 				case DLL:
@@ -288,15 +288,8 @@ wantfound:;
 					printf("=> Linking %s\n", p);
 				varsetp("in", p2);
 				varsetp("out", p);
-				if (tasks[i].type != LIB) {
-					p = xstrdup("");
-					for (size_t j = 0; j < tasks[i].nlibs; j++) {
-						asprintf(&p2, "%s %s%s", p, tc->libprefix, tasks[i].libs[j]);
-						free(p);
-						p = p2;
-					}
-					varsetp("lib", p);
-				}
+				if (tasks[i].type != LIB)
+					varsetp("lib", fmtarr(tc->libfmt, tasks[i].libs, tasks[i].nlibs));
 				p = varexpand(p3);
 				if (verbose)
 					puts(p);
