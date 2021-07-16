@@ -13,7 +13,9 @@ static const char *builtin[] = {
 "	objext: .obj",
 "	libfmt: $name.lib",
 "	libprefix: /DEFAULTLIB:",
-"	compile: \"$CL\" /M$[!msvc_staticcrt D]$[msvc_staticcrt T]$[dll  /LD]$[debug d /Zi /Fd:build/$task] $[optfast /O2] $[optsize /O1] /nologo /c /Fo:$out $in",
+"	incfmt: /I$name",
+"	deffmt: /D$name",
+"	compile: \"$CL\" /M$[!msvc_staticcrt D]$[msvc_staticcrt T]$[dll  /LD]$[debug d /Zi /Fd:build/$task] $[optfast /O2] $[optsize /O1] /nologo $inc $def /c /Fo:$out $in",
 "	linkexe: \"$LINK\" $[debug /DEBUG] /NOLOGO $lib /OUT:$out $in",
 "	linklib: \"$LIB\" /NOLOGO /OUT:$out $in",
 "	linkdll: \"$LINK\" $[debug /DEBUG] /NOLOGO /DLL $lib /OUT:$out $in",
@@ -23,7 +25,9 @@ static const char *builtin[] = {
 "	objext: .o",
 "	libfmt: lib$name.a",
 "	libprefix: -l",
-"	compile: \"$GCC\" $[debug -g] $[optfast -O3] $[optsize -Os] $[lib -fPIC] $[dll -fPIC] -c -o $out $in",
+"	incfmt: -I$name",
+"	deffmt: -D$name",
+"	compile: \"$GCC\" $[debug -g] $[optfast -O3] $[optsize -Os] $[lib -fPIC] $[dll -fPIC] $inc $def -c -o $out $in",
 "	linkexe: \"$GCC\" -o $out $in $lib",
 "	linklib: \"$AR\" -rc $out $in",
 "	linkdll: \"$GCC\" -shared -o $out $in $lib",
@@ -189,6 +193,8 @@ wantfound:;
 			varsetd("exe", tasks[i].type == EXE ? "1" : "0");
 			varsetd("lib", tasks[i].type == LIB ? "1" : "0");
 			varsetd("dll", tasks[i].type == DLL ? "1" : "0");
+			varsetp("inc", fmtarr(tc->incfmt, tasks[i].incs, tasks[i].nincs));
+			varsetp("def", fmtarr(tc->deffmt, tasks[i].defs, tasks[i].ndefs));
 
 			arr = tasks[i].srcs;
 			sz = tasks[i].nsrcs;

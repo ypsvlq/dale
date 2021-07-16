@@ -33,14 +33,14 @@ void parse(const char *(*read)(void *data), void *data) {
 		struct var {
 			char *name;
 			char **out;
-		} a[8];
+		} a[10];
 	} vars;
 	struct lists {
 		struct list {
 			char *name;
 			char ***out;
 			size_t *outsz;
-		} a[3];
+		} a[5];
 	} lists;
 
 	state = NONE;
@@ -70,6 +70,8 @@ void parse(const char *(*read)(void *data), void *data) {
 						{"objext", &tc->objext},
 						{"libfmt", &tc->libfmt},
 						{"libprefix", &tc->libprefix},
+						{"incfmt", &tc->incfmt},
+						{"deffmt", &tc->deffmt},
 						{"compile", &tc->compile},
 						{"linkexe", &tc->linkexe},
 						{"linklib", &tc->linklib},
@@ -95,6 +97,8 @@ void parse(const char *(*read)(void *data), void *data) {
 					lists = (struct lists){{
 						{"src", &task->srcs, &task->nsrcs},
 						{"lib", &task->libs, &task->nlibs},
+						{"inc", &task->incs, &task->nincs},
+						{"def", &task->defs, &task->ndefs},
 						{0}
 					}};
 					continue;

@@ -20,6 +20,10 @@ struct task {
 	size_t nsrcs;
 	char **libs;
 	size_t nlibs;
+	char **incs;
+	size_t nincs;
+	char **defs;
+	size_t ndefs;
 	bool build, link;
 };
 
@@ -27,7 +31,7 @@ struct tc {
 	char *name;
 	char **find;
 	size_t nfind;
-	char *objext, *libfmt, *libprefix;
+	char *objext, *libfmt, *libprefix, *incfmt, *deffmt;
 	char *compile, *linkexe, *linklib, *linkdll;
 };
 
