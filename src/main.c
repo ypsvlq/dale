@@ -31,6 +31,17 @@ static const char *builtin[] = {
 "	linkexe: \"$GCC\" -o $out $in $lib",
 "	linklib: \"$AR\" -rc $out $in",
 "	linkdll: \"$GCC\" -shared -o $out $in $lib",
+"toolchain(clang)",
+"	find: clang ar",
+"	objext: .o",
+"	libfmt: lib$name.a",
+"	libprefix: -l",
+"	incfmt: -I$name",
+"	deffmt: -D$name",
+"	compile: \"$CLANG\" $[debug -g] $[optfast -O3] $[optsize -Oz] $[lib -fPIC] $[dll -fPIC] -c -o $out $in",
+"	linkexe: \"$CLANG\" -o $out $in $lib",
+"	linklib: \"$AR\" -rc $out $in",
+"	linkdll: \"$CLANG\" -shared -o $out $in $lib",
 };
 
 struct task *tasks;
