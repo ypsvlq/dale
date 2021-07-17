@@ -51,9 +51,11 @@ void parse(const char *(*read)(void *data), void *data) {
 			continue;
 		if (buf == p) {
 			if (sscanf(p, "%[^= ] = %[^\n]", s1, s2) == 2) {
+				state = NONE;
 				varsetp(s1, varexpand(s2));
 				continue;
 			} else if (sscanf(p, "%[^+ ] += %[^\n]", s1, s2) == 2) {
+				state = NONE;
 				p2 = varexpand(s2);
 				asprintf(&p3, "%s %s", varget(s1), p2);
 				free(p2);
@@ -105,7 +107,7 @@ void parse(const char *(*read)(void *data), void *data) {
 				}
 			}
 		} else {
-			if (sscanf(p, "%[^: ] : %[^\n]", s1, s2) == 2) {
+			if (state != NONE && sscanf(p, "%[^: ] : %[^\n]", s1, s2) == 2) {
 				if (state == TASK || state == TOOLCHAIN) {
 					for (struct list *l = lists.a; l->name; l++) {
 						if (!strcmp(s1, l->name)) {
