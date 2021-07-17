@@ -38,7 +38,7 @@ static const char *builtin[] = {
 "	libfmt: -l$name",
 "	incfmt: -I$name",
 "	deffmt: -D$name",
-"	compile: \"$CLANG\" $[debug -g] $[optfast -O3] $[optsize -Oz] $[lib -fPIC] $[dll -fPIC] -c -o $out $in",
+"	compile: \"$CLANG\" $[debug -g] $[optfast -O3] $[optsize -Oz] $[lib -fPIC] $[dll -fPIC] $inc $def -c -o $out $in",
 "	linkexe: \"$CLANG\" -o $out $in $lib",
 "	linklib: \"$AR\" -rc $out $in",
 "	linkdll: \"$CLANG\" -shared -o $out $in $lib",
