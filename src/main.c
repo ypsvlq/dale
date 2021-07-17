@@ -58,10 +58,9 @@ int main(int argc, char *argv[]) {
 	size_t taskn = 1;
 	char **want = NULL;
 	size_t nwant = 0;
-	char *fflag = "build.dale";
 	char *lflag = "local.dale";
 	int pflag = 0;
-	char *bdir, *tcname;
+	char *bscript, *bdir, *tcname;
 	bool verbose;
 	char *exeext, *dllfmt;
 
@@ -77,14 +76,10 @@ int main(int argc, char *argv[]) {
 						"\n"
 						"options:\n"
 						"  -h         Show this help\n"
-						"  -f <file>  Set buildscript name (default: build.dale)\n"
 						"  -l <file>  Set localscript name (default: local.dale)\n"
 						"  -p         Process following var=value args after localscript\n"
 					, argv[0]);
 					return 0;
-				case 'f':
-					fflag = argv[++i];
-					break;
 				case 'l':
 					lflag = argv[++i];
 					break;
@@ -125,13 +120,16 @@ int main(int argc, char *argv[]) {
 	if (*varget("nodeftc") != '1')
 		parsea(builtin, LEN(builtin));
 
+	bscript = vargetnull("bscript");
+	if (!bscript)
+		bscript = "build.dale";
 	bdir = vargetnull("bdir");
 	if (!bdir)
 		bdir = "build";
 	tcname = vargetnull("tcname");
 	verbose = vargetnull("verbose");
 
-	parsef(fflag, true);
+	parsef(bscript, true);
 
 	for (size_t i = ntcs; i;) {
 		i--;
