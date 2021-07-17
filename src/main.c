@@ -107,11 +107,13 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	if (!lflag)
+	if (!lflag) {
 		parsef("local.dale", false);
-	else
+	} else {
 		for (size_t i = 0; i < nlflag; i++)
 			parsef(lflag[i], true);
+		free(lflag);
+	}
 
 	if (pflag) {
 		for (int i = pflag; i < argc; i++) {
