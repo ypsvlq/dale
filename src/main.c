@@ -138,7 +138,7 @@ int main(int argc, char *argv[]) {
 		i--;
 		if (tcname && strcmp(tcs[i].name, tcname))
 			continue;
-		if (!tcs[i].find || !tcs[i].objext || !tcs[i].libname || !tcs[i].compile || !tcs[i].linkexe) {
+		if (!tcs[i].find || !tcs[i].objext || !tcs[i].libname || !tcs[i].libfmt || !tcs[i].incfmt || !tcs[i].deffmt || !tcs[i].compile || !tcs[i].linkexe || !tcs[i].linklib || !tcs[i].linkdll) {
 			fprintf(stderr, "Warning: Skipping underspecified toolchain '%s'\n", tcs[i].name);
 			continue;
 		}
