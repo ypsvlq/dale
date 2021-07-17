@@ -80,7 +80,6 @@ int main(int argc, char *argv[]) {
 						"  -f <file>  Set buildscript name (default: build.dale)\n"
 						"  -l <file>  Set localscript name (default: local.dale)\n"
 						"  -p         Process following var=value args after localscript\n"
-						"  -v         Show executed commands\n"
 					, argv[0]);
 					return 0;
 				case 'f':
