@@ -58,7 +58,8 @@ int main(int argc, char *argv[]) {
 	size_t taskn = 1;
 	char **want = NULL;
 	size_t nwant = 0;
-	char *lflag = "local.dale";
+	char **lflag = NULL;
+	size_t nlflag = 0;
 	int pflag = 0;
 	char *bscript, *bdir, *tcname;
 	bool verbose;
@@ -81,10 +82,14 @@ int main(int argc, char *argv[]) {
 					, argv[0]);
 					return 0;
 				case 'l':
-					lflag = argv[++i];
+					lflag = xrealloc(lflag, sizeof(*lflag) * ++nlflag);
+					lflag[nlflag-1] = argv[++i];
 					break;
 				case 'p':
-					pflag = i+1;
+					if (pflag)
+						fprintf(stderr, "Warning: '-p' option used multiple times\n");
+					else
+						pflag = i+1;
 					break;
 				default:
 					err("Unknown option '%s'", argv[i]);
@@ -102,7 +107,11 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	parsef(lflag, false);
+	if (!lflag)
+		parsef("local.dale", false);
+	else
+		for (size_t i = 0; i < nlflag; i++)
+			parsef(lflag[i], true);
 
 	if (pflag) {
 		for (int i = pflag; i < argc; i++) {
