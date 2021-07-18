@@ -102,8 +102,11 @@ char *vargetnull(const char *name) {
 char *varexpand(const char *str) {
 	enum {NONE, NORMAL, COND} type;
 	static const char brackets[] = {0, '(', '['};
+	static const char cbrackets[] = {0, ')', ']'};
+	char *bstack = NULL;
+	size_t nbstack = 0;
 
-	char *out, *p, *p2;
+	char *out, *p, *p2, *p3;
 	size_t len, sz, depth;
 	bool negate;
 
@@ -136,11 +139,41 @@ char *varexpand(const char *str) {
 				if (negate)
 					str++;
 			}
-			sz = strspn(str, valid);
-			p = xstrndup(str, sz);
-			p2 = varget(p);
+			if (type == NONE) {
+				sz = strspn(str, valid);
+				p = xstrndup(str, sz);
+				p2 = varget(p);
+				free(p);
+			} else {
+				for (sz = 0; str[sz]; sz++) {
+					if (str[sz] == '$') {
+						sz++;
+						if (strchr("([", str[sz])) {
+							bstack = xrealloc(bstack, ++nbstack);
+							for (size_t i = 0; i < LEN(brackets); i++) {
+								if (str[sz] == brackets[i]) {
+									bstack[nbstack-1] = cbrackets[i];
+									break;
+								}
+							}
+						}
+					}
+					if (nbstack) {
+						if (str[sz] == bstack[nbstack-1])
+							nbstack--;
+					} else if (!strchr(valid, str[sz])) {
+						break;
+					}
+				}
+				if (nbstack)
+					err("Unmatched brackets");
+				p = xstrndup(str, sz);
+				p3 = varexpand(p);
+				p2 = varget(p3);
+				free(p);
+				free(p3);
+			}
 			str += sz;
-			free(p);
 			if (type == COND) {
 				if (!*str || !*++str)
 					err("Unterminated conditional expansion");
@@ -188,6 +221,8 @@ char *varexpand(const char *str) {
 			}
 		}
 	}
+	if (bstack)
+		free(bstack);
 	if (!out)
 		out = xstrdup("");
 	else
