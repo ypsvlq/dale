@@ -77,8 +77,8 @@ int main(int argc, char *argv[]) {
 						"\n"
 						"options:\n"
 						"  -h         Show this help\n"
-						"  -l <file>  Set localscript name (default: local.dale)\n"
-						"  -p         Process following var=value args after localscript\n"
+						"  -l <file>  Load localscript from path, can be repeated to specify multiple\n"
+						"  -p         Process following var=value args after localscript(s)\n"
 					, argv[0]);
 					return 0;
 				case 'l':
