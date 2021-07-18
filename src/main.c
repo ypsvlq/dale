@@ -142,8 +142,7 @@ int main(int argc, char *argv[]) {
 
 	parsef(bscript, true);
 
-	for (size_t i = ntcs; i;) {
-		i--;
+	for (size_t i = 0; i < ntcs; i++) {
 		if (tcname && strcmp(tcs[i].name, tcname))
 			continue;
 		if (!tcs[i].find || !tcs[i].objext || !tcs[i].libname || !tcs[i].libfmt || !tcs[i].incfmt || !tcs[i].deffmt || !tcs[i].compile || !tcs[i].linkexe || !tcs[i].linklib || !tcs[i].linkdll) {
