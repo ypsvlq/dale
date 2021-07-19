@@ -236,6 +236,9 @@ wantfound:;
 
 	if (tasks) {
 		hostmkdir(bdir);
+		varsetp("LEFLAGS", varexpand("$LFLAGS $LEFLAGS"));
+		varsetp("LDFLAGS", varexpand("$LFLAGS $LDFLAGS"));
+
 		for (size_t i = 0; i < ntasks; i++) {
 			if (nwant && !tasks[i].build)
 				continue;
