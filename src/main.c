@@ -4,8 +4,6 @@
 #include <string.h>
 #include "dale.h"
 
-const char *tasktypes[] = {0, "exe", "lib", "dll"};
-
 static const char *builtin[] = {
 #ifdef _WIN32
 "toolchain(msvc)",

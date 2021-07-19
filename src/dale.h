@@ -36,7 +36,6 @@ struct tc {
 	char *compile, *linkexe, *linklib, *linkdll;
 };
 
-extern const char *tasktypes[4];
 extern struct task *tasks;
 extern size_t ntasks;
 extern struct tc *tcs;

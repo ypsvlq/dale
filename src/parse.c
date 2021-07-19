@@ -22,6 +22,7 @@ static void loadarr(char ***out, size_t *outsz, char *val) {
 }
 
 void parse(const char *(*read)(void *data), void *data) {
+	static const char *tasktypes[] = {0, "exe", "lib", "dll"};
 	static const char *decltypes[] = {0, "task", "toolchain"};
 	static char s1[LINE_MAX], s2[LINE_MAX];
 	const char *buf, *p;
