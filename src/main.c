@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <ctype.h>
 #include "dale.h"
 
 static const char *builtin[] = {
@@ -46,6 +47,34 @@ struct task *tasks;
 size_t ntasks;
 struct tc *tcs;
 size_t ntcs;
+
+static char *upperstr(const char *s) {
+	char *out = xmalloc(strlen(s) + 1);
+	for (size_t i = 0; s[i]; i++)
+		out[i] = toupper(s[i]);
+	out[strlen(s)] = 0;
+	return out;
+}
+
+
+static char *fmtarr(const char *fmt, char **arr, size_t len) {
+	char *out = NULL, *cur, *tmp;
+	for (size_t i = 0; i < len; i++) {
+		varsetd("name", arr[i]);
+		cur = varexpand(fmt);
+		varunset("name");
+		if (out) {
+			asprintf(&tmp, "%s %s", out, cur);
+			free(cur);
+			free(out);
+			out = tmp;
+		} else {
+			out = cur;
+		}
+	}
+	return out ? out : xstrdup("");
+}
+
 
 static void taskvarset(const char *var, size_t taskidx) {
 	char *p;

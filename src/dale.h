@@ -52,13 +52,7 @@ void *xmalloc(size_t n);
 void *xrealloc(void *p, size_t n);
 char *xstrdup(const char *s);
 char *xstrndup(const char *s, size_t max);
-
 int asprintf(char **outp, const char *fmt, ...);
-char *upperstr(const char *s);
-
-int qsortstr(const void *a, const void *b);
-
-char *fmtarr(const char *fmt, char **arr, size_t len);
 
 void glob(char *pattern, char ***out, size_t *outsz);
 

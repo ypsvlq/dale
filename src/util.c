@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 #include "dale.h"
 
 noreturn void err(const char *fmt, ...) {
@@ -59,34 +58,4 @@ int asprintf(char **outp, const char *fmt, ...) {
 	va_end(ap2);
 	va_end(ap);
 	return n;
-}
-
-char *upperstr(const char *s) {
-	char *out = xmalloc(strlen(s) + 1);
-	for (size_t i = 0; s[i]; i++)
-		out[i] = toupper(s[i]);
-	out[strlen(s)] = 0;
-	return out;
-}
-
-int qsortstr(const void *a, const void *b) {
-	return strcmp(*(const char**)a, *(const char**)b);
-}
-
-char *fmtarr(const char *fmt, char **arr, size_t len) {
-	char *out = NULL, *cur, *tmp;
-	for (size_t i = 0; i < len; i++) {
-		varsetd("name", arr[i]);
-		cur = varexpand(fmt);
-		varunset("name");
-		if (out) {
-			asprintf(&tmp, "%s %s", out, cur);
-			free(cur);
-			free(out);
-			out = tmp;
-		} else {
-			out = cur;
-		}
-	}
-	return out ? out : xstrdup("");
 }

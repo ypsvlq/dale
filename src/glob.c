@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include "dale.h"
 
+static int qsortstr(const void *a, const void *b) {
+	return strcmp(*(const char**)a, *(const char**)b);
+}
+
 static bool match(char *pattern, const char *str) {
 	char *p, *p2, *p3;
 	size_t sz;
