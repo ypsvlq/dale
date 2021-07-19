@@ -47,6 +47,13 @@ size_t ntasks;
 struct tc *tcs;
 size_t ntcs;
 
+static void taskvarset(const char *var, size_t taskidx) {
+	char *p;
+	asprintf(&p, "$%s $%s_%s", var, tasks[taskidx].name, var);
+	varsetp(var, varexpand(p));
+	free(p);
+}
+
 int main(int argc, char *argv[]) {
 	char *p, *p2, *p3, *p4;
 	char **arr;
@@ -211,6 +218,10 @@ wantfound:;
 			varsetd("dll", tasks[i].type == DLL ? "1" : "0");
 			varsetp("inc", fmtarr(tc->incfmt, tasks[i].incs, tasks[i].nincs));
 			varsetp("def", fmtarr(tc->deffmt, tasks[i].defs, tasks[i].ndefs));
+			taskvarset("CFLAGS", i);
+			taskvarset("LEFLAGS", i);
+			taskvarset("LLFLAGS", i);
+			taskvarset("LDFLAGS", i);
 
 			arr = tasks[i].srcs;
 			sz = tasks[i].nsrcs;
@@ -316,6 +327,10 @@ wantfound:;
 			varunset("dll");
 			varunset("inc");
 			varunset("def");
+			varunset("CFLAGS");
+			varunset("LEFLAGS");
+			varunset("LLFLAGS");
+			varunset("LDFLAGS");
 		}
 	}
 
