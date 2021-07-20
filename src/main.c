@@ -258,10 +258,34 @@ wantfound:;
 
 			for (size_t j = 0; j < tasks[i].nreqs; j++) {
 				asprintf(&p, "HAVE_%s", tasks[i].reqs[j]);
-				if (!vargetnull(p))
+				if (!vargetnull(p)) {
+					free(p);
+					p = vargetnull("dalereq");
+					if (p) {
+						asprintf(&p2, "%s cflags %s", p, tasks[i].reqs[j]);
+						p3 = hostexecout(p2);
+						free(p2);
+						if (p3) {
+							asprintf(&p4, "%s %s", varget("CFLAGS"), p3);
+							varsetp("CFLAGS", p4);
+							free(p3);
+							asprintf(&p2, "%s libs %s", p, tasks[i].reqs[j]);
+							p3 = hostexecout(p2);
+							free(p2);
+							if (p3) {
+								asprintf(&p4, "%s %s", varget("LIBS"), p3);
+								varsetp("LIBS", p4);
+								free(p3);
+								continue;
+							}
+						}
+					}
 					err("Required library '%s' not defined", tasks[i].reqs[j]);
-				taskvarset("CFLAGS", tasks[i].reqs[j]);
-				taskvarset("LIBS", tasks[i].reqs[j]);
+				} else {
+					taskvarset("CFLAGS", tasks[i].reqs[j]);
+					taskvarset("LIBS", tasks[i].reqs[j]);
+				}
+				free(p);
 			}
 
 			arr = tasks[i].srcs;
