@@ -11,9 +11,9 @@ static const char *builtin[] = {
 "	find: cl link lib",
 "	objext: .obj",
 "	libext: .lib",
-"	libfmt: /DEFAULTLIB:$name",
-"	incfmt: /I$name",
-"	deffmt: /D$name",
+"	libpfx: /DEFAULTLIB:",
+"	incpfx: /I",
+"	defpfx: /D",
 "	compile: \"$CL\" $CFLAGS /M$[!msvc_staticcrt D]$[msvc_staticcrt T]$[dll  /LD]$[debug d /Zi /Fd:build/$task] $[optfast /O2] $[optsize /O1] /nologo $inc $def /c /Fo:$out $in",
 "	linkexe: \"$LINK\" $LEFLAGS $[debug /DEBUG] /NOLOGO $lib /OUT:$out $in $LIBS",
 "	linklib: \"$LIB\" $LLFLAGS /NOLOGO /OUT:$out $in",
@@ -23,9 +23,9 @@ static const char *builtin[] = {
 "	find: clang ar",
 "	objext: .o",
 "	libext: .a",
-"	libfmt: -l$name",
-"	incfmt: -I$name",
-"	deffmt: -D$name",
+"	libpfx: -l",
+"	incpfx: -I",
+"	defpfx: -D",
 "	compile: \"$CLANG\" $CFLAGS $[debug -g] $[optfast -O3] $[optsize -Oz] $[lib -fPIC] $[dll -fPIC] $inc $def -c -o $out $in",
 "	linkexe: \"$CLANG\" $LEFLAGS -o $out $in $lib $LIBS",
 "	linklib: \"$AR\" -rc $LLFLAGS $out $in",
@@ -34,9 +34,9 @@ static const char *builtin[] = {
 "	find: gcc ar",
 "	objext: .o",
 "	libext: .a",
-"	libfmt: -l$name",
-"	incfmt: -I$name",
-"	deffmt: -D$name",
+"	libpfx: -l",
+"	incpfx: -I",
+"	defpfx: -D",
 "	compile: \"$GCC\" $CFLAGS $[debug -g] $[optfast -O3] $[optsize -Os] $[lib -fPIC] $[dll -fPIC] $inc $def -c -o $out $in",
 "	linkexe: \"$GCC\" $LEFLAGS -o $out $in $lib $LIBS",
 "	linklib: \"$AR\" -rc $LLFLAGS $out $in",
@@ -57,22 +57,15 @@ static char *upperstr(const char *s) {
 }
 
 
-static char *fmtarr(const char *fmt, char **arr, size_t len) {
-	char *out = NULL, *cur, *tmp;
+static char *fmtarr(const char *pfx, char **arr, size_t len) {
+	char *out, *tmp;
+	out = xstrdup("");
 	for (size_t i = 0; i < len; i++) {
-		varsetd("name", arr[i]);
-		cur = varexpand(fmt);
-		varunset("name");
-		if (out) {
-			asprintf(&tmp, "%s %s", out, cur);
-			free(cur);
-			free(out);
-			out = tmp;
-		} else {
-			out = cur;
-		}
+		asprintf(&tmp, "%s%s%s ", out, pfx, arr[i]);
+		free(out);
+		out = tmp;
 	}
-	return out ? out : xstrdup("");
+	return out;
 }
 
 
@@ -183,7 +176,7 @@ int main(int argc, char *argv[]) {
 	for (size_t i = 0; i < ntcs; i++) {
 		if (tcname && strcmp(tcs[i].name, tcname))
 			continue;
-		if (!tcs[i].find || !tcs[i].objext || !tcs[i].libext || !tcs[i].libfmt || !tcs[i].incfmt || !tcs[i].deffmt || !tcs[i].compile || !tcs[i].linkexe || !tcs[i].linklib || !tcs[i].linkdll) {
+		if (!tcs[i].find || !tcs[i].objext || !tcs[i].libext || !tcs[i].libpfx || !tcs[i].incpfx || !tcs[i].defpfx || !tcs[i].compile || !tcs[i].linkexe || !tcs[i].linklib || !tcs[i].linkdll) {
 			fprintf(stderr, "Warning: Skipping underspecified toolchain '%s'\n", tcs[i].name);
 			continue;
 		}
@@ -252,8 +245,8 @@ wantfound:;
 			varsetd("exe", tasks[i].type == EXE ? "1" : "0");
 			varsetd("lib", tasks[i].type == LIB ? "1" : "0");
 			varsetd("dll", tasks[i].type == DLL ? "1" : "0");
-			varsetp("inc", fmtarr(tc->incfmt, tasks[i].incs, tasks[i].nincs));
-			varsetp("def", fmtarr(tc->deffmt, tasks[i].defs, tasks[i].ndefs));
+			varsetp("inc", fmtarr(tc->incpfx, tasks[i].incs, tasks[i].nincs));
+			varsetp("def", fmtarr(tc->defpfx, tasks[i].defs, tasks[i].ndefs));
 			taskvarset("CFLAGS", tasks[i].name);
 			taskvarset("LIBS", tasks[i].name);
 			taskvarset("LEFLAGS", tasks[i].name);
@@ -360,7 +353,7 @@ wantfound:;
 				varsetp("in", p2);
 				varsetp("out", p);
 				if (tasks[i].type != LIB)
-					varsetp("lib", fmtarr(tc->libfmt, tasks[i].libs, tasks[i].nlibs));
+					varsetp("lib", fmtarr(tc->libpfx, tasks[i].libs, tasks[i].nlibs));
 				p = varexpand(p3);
 				if (verbose)
 					puts(p);

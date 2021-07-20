@@ -74,9 +74,9 @@ void parse(const char *(*read)(void *data), void *data) {
 					vars = (struct vars){{
 						{"objext", &tc->objext},
 						{"libext", &tc->libext},
-						{"libfmt", &tc->libfmt},
-						{"incfmt", &tc->incfmt},
-						{"deffmt", &tc->deffmt},
+						{"libpfx", &tc->libpfx},
+						{"incpfx", &tc->incpfx},
+						{"defpfx", &tc->defpfx},
 						{"compile", &tc->compile},
 						{"linkexe", &tc->linkexe},
 						{"linklib", &tc->linklib},

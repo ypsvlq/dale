@@ -34,7 +34,7 @@ struct tc {
 	char **find;
 	size_t nfind;
 	char *objext, *libext;
-	char *libfmt, *incfmt, *deffmt;
+	char *libpfx, *incpfx, *defpfx;
 	char *compile, *linkexe, *linklib, *linkdll;
 };
 
