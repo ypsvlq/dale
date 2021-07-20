@@ -73,7 +73,7 @@ void parse(const char *(*read)(void *data), void *data) {
 					tc->name = xstrdup(s2);
 					vars = (struct vars){{
 						{"objext", &tc->objext},
-						{"libname", &tc->libname},
+						{"libext", &tc->libext},
 						{"libfmt", &tc->libfmt},
 						{"incfmt", &tc->incfmt},
 						{"deffmt", &tc->deffmt},

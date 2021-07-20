@@ -40,7 +40,7 @@ void hostquit(void) {
 void hostsetvars(void) {
 	varsetd("target", "posix");
 	varsetd("posix", "1");
-	varsetd("dllfmt", "lib$name.so");
+	varsetd("dllext", ".so");
 }
 
 void hostmkdir(const char *path) {

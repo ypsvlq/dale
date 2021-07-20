@@ -10,7 +10,7 @@ static const char *builtin[] = {
 "toolchain(msvc)",
 "	find: cl link lib",
 "	objext: .obj",
-"	libname: $name.lib",
+"	libext: .lib",
 "	libfmt: /DEFAULTLIB:$name",
 "	incfmt: /I$name",
 "	deffmt: /D$name",
@@ -22,7 +22,7 @@ static const char *builtin[] = {
 "toolchain(clang)",
 "	find: clang ar",
 "	objext: .o",
-"	libname: lib$name.a",
+"	libext: .a",
 "	libfmt: -l$name",
 "	incfmt: -I$name",
 "	deffmt: -D$name",
@@ -33,7 +33,7 @@ static const char *builtin[] = {
 "toolchain(gcc)",
 "	find: gcc ar",
 "	objext: .o",
-"	libname: lib$name.a",
+"	libext: .a",
 "	libfmt: -l$name",
 "	incfmt: -I$name",
 "	deffmt: -D$name",
@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
 	int pflag = 0;
 	char *bscript, *bdir, *tcname, *dalereq;
 	bool verbose;
-	char *exeext, *dllfmt;
+	char *exeext, *dllext;
 
 	hostinit();
 
@@ -183,7 +183,7 @@ int main(int argc, char *argv[]) {
 	for (size_t i = 0; i < ntcs; i++) {
 		if (tcname && strcmp(tcs[i].name, tcname))
 			continue;
-		if (!tcs[i].find || !tcs[i].objext || !tcs[i].libname || !tcs[i].libfmt || !tcs[i].incfmt || !tcs[i].deffmt || !tcs[i].compile || !tcs[i].linkexe || !tcs[i].linklib || !tcs[i].linkdll) {
+		if (!tcs[i].find || !tcs[i].objext || !tcs[i].libext || !tcs[i].libfmt || !tcs[i].incfmt || !tcs[i].deffmt || !tcs[i].compile || !tcs[i].linkexe || !tcs[i].linklib || !tcs[i].linkdll) {
 			fprintf(stderr, "Warning: Skipping underspecified toolchain '%s'\n", tcs[i].name);
 			continue;
 		}
@@ -225,7 +225,7 @@ int main(int argc, char *argv[]) {
 	printf("Using toolchain '%s'\n", tc->name);
 
 	exeext = varget("exeext");
-	dllfmt = varget("dllfmt");
+	dllext = varget("dllext");
 
 	for (size_t i = 0; i < nwant; i++) {
 		for (size_t j = 0; j < ntasks; j++) {
@@ -346,27 +346,14 @@ wantfound:;
 					break;
 				case LIB:
 					p3 = tc->linklib;
-					varsetd("name", tasks[i].name);
-					p4 = varexpand(tc->libname);
-					varunset("name");
+					p4 = tc->libext;
 					break;
 				case DLL:
 					p3 = tc->linkdll;
-					varsetd("name", tasks[i].name);
-					p4 = varexpand(dllfmt);
-					varunset("name");
+					p4 = dllext;
 					break;
 			}
-			switch (tasks[i].type) {
-				case EXE:
-					asprintf(&p, "%s/%s%s", bdir, tasks[i].name, p4);
-					break;
-				case LIB:
-				case DLL:
-					asprintf(&p, "%s/%s", bdir, p4);
-					free(p4);
-					break;
-			}
+			asprintf(&p, "%s/%s%s", bdir, tasks[i].name, p4);
 			if (tasks[i].link || !hostfexists(p)) {
 				if (!verbose)
 					printf("=> Linking %s\n", p);
