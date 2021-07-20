@@ -15,9 +15,9 @@ static const char *builtin[] = {
 "	incfmt: /I$name",
 "	deffmt: /D$name",
 "	compile: \"$CL\" $CFLAGS /M$[!msvc_staticcrt D]$[msvc_staticcrt T]$[dll  /LD]$[debug d /Zi /Fd:build/$task] $[optfast /O2] $[optsize /O1] /nologo $inc $def /c /Fo:$out $in",
-"	linkexe: \"$LINK\" $LEFLAGS $[debug /DEBUG] /NOLOGO $lib /OUT:$out $in",
+"	linkexe: \"$LINK\" $LEFLAGS $[debug /DEBUG] /NOLOGO $lib /OUT:$out $in $LIBS",
 "	linklib: \"$LIB\" $LLFLAGS /NOLOGO /OUT:$out $in",
-"	linkdll: \"$LINK\" $LDFLAGS $[debug /DEBUG] /NOLOGO /DLL $lib /OUT:$out $in",
+"	linkdll: \"$LINK\" $LDFLAGS $[debug /DEBUG] /NOLOGO /DLL $lib /OUT:$out $in $LIBS",
 #endif
 "toolchain(clang)",
 "	find: clang ar",
@@ -27,9 +27,9 @@ static const char *builtin[] = {
 "	incfmt: -I$name",
 "	deffmt: -D$name",
 "	compile: \"$CLANG\" $CFLAGS $[debug -g] $[optfast -O3] $[optsize -Oz] $[lib -fPIC] $[dll -fPIC] $inc $def -c -o $out $in",
-"	linkexe: \"$CLANG\" $LEFLAGS -o $out $in $lib",
+"	linkexe: \"$CLANG\" $LEFLAGS -o $out $in $lib $LIBS",
 "	linklib: \"$AR\" -rc $LLFLAGS $out $in",
-"	linkdll: \"$CLANG\" $LDFLAGS -shared -o $out $in $lib",
+"	linkdll: \"$CLANG\" $LDFLAGS -shared -o $out $in $lib $LIBS",
 "toolchain(gcc)",
 "	find: gcc ar",
 "	objext: .o",
@@ -38,9 +38,9 @@ static const char *builtin[] = {
 "	incfmt: -I$name",
 "	deffmt: -D$name",
 "	compile: \"$GCC\" $CFLAGS $[debug -g] $[optfast -O3] $[optsize -Os] $[lib -fPIC] $[dll -fPIC] $inc $def -c -o $out $in",
-"	linkexe: \"$GCC\" $LEFLAGS -o $out $in $lib",
+"	linkexe: \"$GCC\" $LEFLAGS -o $out $in $lib $LIBS",
 "	linklib: \"$AR\" -rc $LLFLAGS $out $in",
-"	linkdll: \"$GCC\" $LDFLAGS -shared -o $out $in $lib",
+"	linkdll: \"$GCC\" $LDFLAGS -shared -o $out $in $lib $LIBS",
 };
 
 struct task *tasks;
@@ -76,9 +76,9 @@ static char *fmtarr(const char *fmt, char **arr, size_t len) {
 }
 
 
-static void taskvarset(const char *var, size_t taskidx) {
+static void taskvarset(const char *var, const char *name) {
 	char *p;
-	asprintf(&p, "$%s $%s_%s", var, tasks[taskidx].name, var);
+	asprintf(&p, "$%s $%s_%s", var, name, var);
 	varsetp(var, varexpand(p));
 	free(p);
 }
@@ -250,10 +250,19 @@ wantfound:;
 			varsetd("dll", tasks[i].type == DLL ? "1" : "0");
 			varsetp("inc", fmtarr(tc->incfmt, tasks[i].incs, tasks[i].nincs));
 			varsetp("def", fmtarr(tc->deffmt, tasks[i].defs, tasks[i].ndefs));
-			taskvarset("CFLAGS", i);
-			taskvarset("LEFLAGS", i);
-			taskvarset("LLFLAGS", i);
-			taskvarset("LDFLAGS", i);
+			taskvarset("CFLAGS", tasks[i].name);
+			taskvarset("LIBS", tasks[i].name);
+			taskvarset("LEFLAGS", tasks[i].name);
+			taskvarset("LLFLAGS", tasks[i].name);
+			taskvarset("LDFLAGS", tasks[i].name);
+
+			for (size_t j = 0; j < tasks[i].nreqs; j++) {
+				asprintf(&p, "HAVE_%s", tasks[i].reqs[j]);
+				if (!vargetnull(p))
+					err("Required library '%s' not defined", tasks[i].reqs[j]);
+				taskvarset("CFLAGS", tasks[i].reqs[j]);
+				taskvarset("LIBS", tasks[i].reqs[j]);
+			}
 
 			arr = tasks[i].srcs;
 			sz = tasks[i].nsrcs;

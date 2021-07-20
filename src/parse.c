@@ -41,7 +41,7 @@ void parse(const char *(*read)(void *data), void *data) {
 			char *name;
 			char ***out;
 			size_t *outsz;
-		} a[5];
+		} a[6];
 	} lists;
 
 	state = NONE;
@@ -104,6 +104,7 @@ void parse(const char *(*read)(void *data), void *data) {
 						{"lib", &task->libs, &task->nlibs},
 						{"inc", &task->incs, &task->nincs},
 						{"def", &task->defs, &task->ndefs},
+						{"req", &task->reqs, &task->nreqs},
 						{0}
 					}};
 					continue;

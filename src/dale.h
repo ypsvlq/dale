@@ -24,6 +24,8 @@ struct task {
 	size_t nincs;
 	char **defs;
 	size_t ndefs;
+	char **reqs;
+	size_t nreqs;
 	bool build, link;
 };
 
