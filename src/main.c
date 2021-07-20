@@ -362,6 +362,11 @@ wantfound:;
 			}
 			free(p);
 
+			for (size_t j = 0; j < tasks[i].nreqs; j++) {
+				varunset("CFLAGS");
+				varunset("LIBS");
+			}
+
 			varunset("task");
 			varunset("exe");
 			varunset("lib");
@@ -369,6 +374,7 @@ wantfound:;
 			varunset("inc");
 			varunset("def");
 			varunset("CFLAGS");
+			varunset("LIBS");
 			varunset("LEFLAGS");
 			varunset("LLFLAGS");
 			varunset("LDFLAGS");
