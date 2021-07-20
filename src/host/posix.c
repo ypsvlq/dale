@@ -1,5 +1,6 @@
 #define _XOPEN_SOURCE 700
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
@@ -98,4 +99,35 @@ bool hostisdir(const char *path) {
 	if (stat(path, &sb) == -1)
 		err("stat '%s': %s", path, strerror(errno));
 	return S_ISDIR(sb.st_mode);
+}
+
+char *hostexecout(const char *cmd) {
+	char *s = NULL;
+	size_t sz = 0;
+	FILE *p;
+	int status;
+
+	p = popen(cmd, "r");
+	if (!p)
+		err("popen '%s': %s", cmd, strerror(errno));
+
+	errno = 0;
+	if (getline(&s, &sz, p) == -1 && errno)
+		err("getline: %s", strerror(errno));
+
+	status = pclose(p);
+	if (status == -1) {
+		err("pclose: %s", strerror(errno));
+	} else if (WIFEXITED(status)) {
+		if (WEXITSTATUS(status) == 0) {
+			s[strlen(s)-1] = '\0';
+			return s;
+		} else {
+			if (s)
+				free(s);
+			return NULL;
+		}
+	} else {
+		err("Process terminated unexpectedly");
+	}
 }
