@@ -192,3 +192,25 @@ bool hostisdir(const char *path) {
 	free(wpath);
 	return ret;
 }
+
+char *hostexecout(const char *cmd) {
+	char *s, *s2;
+	FILE *p;
+	int status;
+
+	p = _popen(cmd, "r");
+	if (!p)
+		err("popen '%s': %s", cmd, strerror(errno));
+
+	s = xmalloc(8192);
+	s2 = fgets(s, 8192, p);
+	if (s2)
+		s[strlen(s)-1] = '\0';
+
+	if (_pclose(p)) {
+		free(s);
+		return NULL;
+	} else {
+		return s;
+	}
+}
