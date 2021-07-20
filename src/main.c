@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
 	char **lflag = NULL;
 	size_t nlflag = 0;
 	int pflag = 0;
-	char *bscript, *bdir, *tcname;
+	char *bscript, *bdir, *tcname, *dalereq;
 	bool verbose;
 	char *exeext, *dllfmt;
 
@@ -173,6 +173,10 @@ int main(int argc, char *argv[]) {
 		bdir = "build";
 	tcname = vargetnull("tcname");
 	verbose = vargetnull("verbose");
+	dalereq = NULL;
+	if (!vargetnull("nodalereq"))
+		if (!(dalereq = vargetnull("DALEREQ")))
+			dalereq = hostfind("dalereq");
 
 	parsef(bscript, true);
 
@@ -260,22 +264,21 @@ wantfound:;
 				asprintf(&p, "HAVE_%s", tasks[i].reqs[j]);
 				if (!vargetnull(p)) {
 					free(p);
-					p = vargetnull("dalereq");
-					if (p) {
-						asprintf(&p2, "%s cflags %s", p, tasks[i].reqs[j]);
-						p3 = hostexecout(p2);
-						free(p2);
-						if (p3) {
-							asprintf(&p4, "%s %s", varget("CFLAGS"), p3);
-							varsetp("CFLAGS", p4);
-							free(p3);
-							asprintf(&p2, "%s libs %s", p, tasks[i].reqs[j]);
-							p3 = hostexecout(p2);
+					if (dalereq) {
+						asprintf(&p, "%s cflags %s", dalereq, tasks[i].reqs[j]);
+						p2 = hostexecout(p);
+						free(p);
+						if (p2) {
+							asprintf(&p3, "%s %s", varget("CFLAGS"), p2);
+							varsetp("CFLAGS", p3);
 							free(p2);
-							if (p3) {
-								asprintf(&p4, "%s %s", varget("LIBS"), p3);
-								varsetp("LIBS", p4);
-								free(p3);
+							asprintf(&p, "%s libs %s", dalereq, tasks[i].reqs[j]);
+							p2 = hostexecout(p);
+							free(p);
+							if (p2) {
+								asprintf(&p3, "%s %s", varget("LIBS"), p2);
+								varsetp("LIBS", p3);
+								free(p2);
 								continue;
 							}
 						}
