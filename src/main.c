@@ -59,7 +59,6 @@ static char *upperstr(const char *s) {
 	return out;
 }
 
-
 static char *fmtarr(const char *pfx, char **arr, size_t len) {
 	char *out, *tmp;
 	out = xstrdup("");
@@ -70,7 +69,6 @@ static char *fmtarr(const char *pfx, char **arr, size_t len) {
 	}
 	return out;
 }
-
 
 static void taskvarset(const char *var, const char *name) {
 	char *p;
@@ -173,11 +171,11 @@ int main(int argc, char *argv[]) {
 	if (!vargetnull("nodalereq"))
 		if (!(dalereq = vargetnull("DALEREQ")))
 			dalereq = hostfind("dalereq");
+
+	parsef(bscript, true);
 	lang = vargetnull("lang");
 	if (!lang)
 		lang = "c";
-
-	parsef(bscript, true);
 
 	for (size_t i = 0; i < ntcs; i++) {
 		if (tcname && strcmp(tcs[i].name, tcname))
