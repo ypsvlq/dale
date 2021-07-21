@@ -34,7 +34,7 @@ void parse(const char *(*read)(void *data), void *data) {
 		struct var {
 			char *name;
 			char **out;
-		} a[10];
+		} a[11];
 	} vars;
 	struct lists {
 		struct list {
@@ -72,6 +72,7 @@ void parse(const char *(*read)(void *data), void *data) {
 					*tc = (struct tc){0};
 					tc->name = xstrdup(s2);
 					vars = (struct vars){{
+						{"lang", &tc->lang},
 						{"objext", &tc->objext},
 						{"libext", &tc->libext},
 						{"libpfx", &tc->libpfx},

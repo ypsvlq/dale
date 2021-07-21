@@ -8,6 +8,7 @@
 static const char *builtin[] = {
 #ifdef _WIN32
 "toolchain(msvc)",
+"	lang: c",
 "	find: cl link lib",
 "	objext: .obj",
 "	libext: .lib",
@@ -20,6 +21,7 @@ static const char *builtin[] = {
 "	linkdll: \"$LINK\" $LDFLAGS $[debug /DEBUG] /NOLOGO /DLL $lib /OUT:$out $in $LIBS",
 #endif
 "toolchain(clang)",
+"	lang: c",
 "	find: clang ar",
 "	objext: .o",
 "	libext: .a",
@@ -31,6 +33,7 @@ static const char *builtin[] = {
 "	linklib: \"$AR\" -rc $LLFLAGS $out $in",
 "	linkdll: \"$CLANG\" $LDFLAGS -shared -o $out $in $lib $LIBS",
 "toolchain(gcc)",
+"	lang: c",
 "	find: gcc ar",
 "	objext: .o",
 "	libext: .a",
@@ -88,7 +91,7 @@ int main(int argc, char *argv[]) {
 	char **lflag = NULL;
 	size_t nlflag = 0;
 	int pflag = 0;
-	char *bscript, *bdir, *tcname, *dalereq;
+	char *bscript, *bdir, *tcname, *dalereq, *lang;
 	bool verbose;
 	char *exeext, *dllext;
 
@@ -170,6 +173,9 @@ int main(int argc, char *argv[]) {
 	if (!vargetnull("nodalereq"))
 		if (!(dalereq = vargetnull("DALEREQ")))
 			dalereq = hostfind("dalereq");
+	lang = vargetnull("lang");
+	if (!lang)
+		lang = "c";
 
 	parsef(bscript, true);
 
@@ -180,6 +186,8 @@ int main(int argc, char *argv[]) {
 			fprintf(stderr, "Warning: Skipping underspecified toolchain '%s'\n", tcs[i].name);
 			continue;
 		}
+		if (strcmp(tcs[i].lang, lang))
+			continue;
 		for (size_t j = 0; j < tcs[i].nfind; j++) {
 			p2 = upperstr(tcs[i].find[j]);
 			if (vargetnull(p2)) {
@@ -211,7 +219,8 @@ int main(int argc, char *argv[]) {
 		else
 			fprintf(stderr, "Error: Unknown toolchain '%s' (known:", tcname);
 		for (size_t i = 0; i < ntcs; i++)
-			fprintf(stderr, " %s", tcs[i].name);
+			if (!strcmp(tcs[i].lang, lang))
+				fprintf(stderr, " %s", tcs[i].name);
 		fputs(")\n", stderr);
 		return 1;
 	}

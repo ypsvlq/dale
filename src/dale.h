@@ -30,6 +30,7 @@ struct task {
 };
 
 struct tc {
+	char *lang;
 	char *name;
 	char **find;
 	size_t nfind;
