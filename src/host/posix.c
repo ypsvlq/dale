@@ -41,6 +41,17 @@ void hostsetvars(void) {
 	varsetd("target", "posix");
 	varsetd("posix", "1");
 	varsetd("dllext", ".so");
+#if defined __linux__
+	varsetd("linux", "1");
+#elif defined __OpenBSD__
+	varsetd("openbsd", "1");
+#elif defined __NetBSD__
+	varsetd("netbsd", "1");
+#elif defined __FreeBSD__
+	varsetd("freebsd", "1");
+#elif defined __DragonFly__
+	varsetd("dragonflybsd", "1");
+#endif
 }
 
 void hostmkdir(const char *path) {
