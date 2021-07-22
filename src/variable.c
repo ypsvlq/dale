@@ -48,6 +48,20 @@ void varsetd(const char *name, const char *val) {
 	varsetp(name, xstrdup(val));
 }
 
+void varappend(const char *name, const char *val) {
+	char *p;
+	uint32_t idx = getidx(name);
+	for (struct var *var = tbl[idx]; var; var = var->next) {
+		if (!strcmp(var->name, name)) {
+			asprintf(&p, "%s %s", var->val, val);
+			free(var->val);
+			var->val = p;
+			return;
+		}
+	}
+	varsetd(name, val);
+}
+
 void varunset(const char *name) {
 	struct var *tmp = NULL;
 	uint32_t idx = getidx(name);
@@ -69,18 +83,6 @@ void varunset(const char *name) {
 		free(tmp->val);
 		free(tmp);
 	}
-}
-
-void varupdate(const char *name, char *val) {
-	uint32_t idx = getidx(name);
-	for (struct var *var = tbl[idx]; var; var = var->next) {
-		if (!strcmp(var->name, name)) {
-			free(var->val);
-			var->val = val;
-			return;
-		}
-	}
-	err("Unknown variable '%s'", name);
 }
 
 char *varget(const char *name) {
