@@ -15,7 +15,7 @@ static const char *builtin[] = {
 "	libpfx: /DEFAULTLIB:",
 "	incpfx: /I",
 "	defpfx: /D",
-"	compile: \"$CL\" $CFLAGS /M$[!msvc_staticcrt D]$[msvc_staticcrt T]$[dll  /LD]$[debug d /Zi /Fd:build/$task] $[optfast /O2] $[optsize /O1] /nologo $inc $def /c /Fo:$out $in",
+"	compile: \"$CL\" $CFLAGS /M$[!msvc_staticcrt D]$[msvc_staticcrt T]$[dll  /LD]$[debug d /Zi /Fd:build/$task] $[optfast /O2] $[optsize /O1] /nologo /c /Fo:$out $in",
 "	linkexe: \"$LINK\" $LEFLAGS $[debug /DEBUG] /NOLOGO $lib /OUT:$out $in $LIBS",
 "	linklib: \"$LIB\" $LLFLAGS /NOLOGO /OUT:$out $in",
 "	linkdll: \"$LINK\" $LDFLAGS $[debug /DEBUG] /NOLOGO /DLL $lib /OUT:$out $in $LIBS",
@@ -28,10 +28,10 @@ static const char *builtin[] = {
 "	libpfx: -l",
 "	incpfx: -I",
 "	defpfx: -D",
-"	compile: \"$CLANG\" $CFLAGS $[debug -g] $[optfast -O3] $[optsize -Oz] $[lib -fPIC] $[dll -fPIC] $inc $def -c -o $out $in",
-"	linkexe: \"$CLANG\" $LEFLAGS -o $out $in $lib $LIBS",
+"	compile: \"$CLANG\" $CFLAGS $[debug -g] $[optfast -O3] $[optsize -Oz] $[lib -fPIC] $[dll -fPIC] -c -o $out $in",
+"	linkexe: \"$CLANG\" $LEFLAGS -o $out $in $LIBS",
 "	linklib: \"$AR\" -rc $LLFLAGS $out $in",
-"	linkdll: \"$CLANG\" $LDFLAGS -shared -o $out $in $lib $LIBS",
+"	linkdll: \"$CLANG\" $LDFLAGS -shared -o $out $in $LIBS",
 "toolchain(gcc)",
 "	lang: c",
 "	find: gcc ar",
@@ -40,10 +40,10 @@ static const char *builtin[] = {
 "	libpfx: -l",
 "	incpfx: -I",
 "	defpfx: -D",
-"	compile: \"$GCC\" $CFLAGS $[debug -g] $[optfast -O3] $[optsize -Os] $[lib -fPIC] $[dll -fPIC] $inc $def -c -o $out $in",
-"	linkexe: \"$GCC\" $LEFLAGS -o $out $in $lib $LIBS",
+"	compile: \"$GCC\" $CFLAGS $[debug -g] $[optfast -O3] $[optsize -Os] $[lib -fPIC] $[dll -fPIC] -c -o $out $in",
+"	linkexe: \"$GCC\" $LEFLAGS -o $out $in $LIBS",
 "	linklib: \"$AR\" -rc $LLFLAGS $out $in",
-"	linkdll: \"$GCC\" $LDFLAGS -shared -o $out $in $lib $LIBS",
+"	linkdll: \"$GCC\" $LDFLAGS -shared -o $out $in $LIBS",
 "toolchain(clang++)",
 "	lang: c++",
 "	find: clang++ ar",
@@ -52,10 +52,10 @@ static const char *builtin[] = {
 "	libpfx: -l",
 "	incpfx: -I",
 "	defpfx: -D",
-"	compile: \"$CLANG++\" $CFLAGS $[debug -g] $[optfast -O3] $[optsize -Oz] $[lib -fPIC] $[dll -fPIC] $inc $def -c -o $out $in",
-"	linkexe: \"$CLANG++\" $LEFLAGS -o $out $in $lib $LIBS",
+"	compile: \"$CLANG++\" $CFLAGS $[debug -g] $[optfast -O3] $[optsize -Oz] $[lib -fPIC] $[dll -fPIC] -c -o $out $in",
+"	linkexe: \"$CLANG++\" $LEFLAGS -o $out $in $LIBS",
 "	linklib: \"$AR\" -rc $LLFLAGS $out $in",
-"	linkdll: \"$CLANG++\" $LDFLAGS -shared -o $out $in $lib $LIBS",
+"	linkdll: \"$CLANG++\" $LDFLAGS -shared -o $out $in $LIBS",
 "toolchain(g++)",
 "	lang: c++",
 "	find: g++ ar",
@@ -64,10 +64,10 @@ static const char *builtin[] = {
 "	libpfx: -l",
 "	incpfx: -I",
 "	defpfx: -D",
-"	compile: \"$G++\" $CFLAGS $[debug -g] $[optfast -O3] $[optsize -Os] $[lib -fPIC] $[dll -fPIC] $inc $def -c -o $out $in",
-"	linkexe: \"$G++\" $LEFLAGS -o $out $in $lib $LIBS",
+"	compile: \"$G++\" $CFLAGS $[debug -g] $[optfast -O3] $[optsize -Os] $[lib -fPIC] $[dll -fPIC] -c -o $out $in",
+"	linkexe: \"$G++\" $LEFLAGS -o $out $in $LIBS",
 "	linklib: \"$AR\" -rc $LLFLAGS $out $in",
-"	linkdll: \"$G++\" $LDFLAGS -shared -o $out $in $lib $LIBS",
+"	linkdll: \"$G++\" $LDFLAGS -shared -o $out $in $LIBS",
 };
 
 struct task *tasks;
@@ -83,15 +83,17 @@ static char *upperstr(const char *s) {
 	return out;
 }
 
-static char *fmtarr(const char *pfx, char **arr, size_t len) {
+static void varpfxarr(const char *var, const char *pfx, char **arr, size_t len) {
 	char *out, *tmp;
-	out = xstrdup("");
-	for (size_t i = 0; i < len; i++) {
+	if (!len)
+		return;
+	asprintf(&out, "%s%s ", pfx, arr[0]);
+	for (size_t i = 1; i < len; i++) {
 		asprintf(&tmp, "%s%s%s ", out, pfx, arr[i]);
 		free(out);
 		out = tmp;
 	}
-	return out;
+	varsetp(var, out);
 }
 
 static void taskvarset(const char *var, const char *name) {
@@ -276,8 +278,8 @@ wantfound:;
 			varsetd("exe", tasks[i].type == EXE ? "1" : "0");
 			varsetd("lib", tasks[i].type == LIB ? "1" : "0");
 			varsetd("dll", tasks[i].type == DLL ? "1" : "0");
-			varsetp("inc", fmtarr(tc->incpfx, tasks[i].incs, tasks[i].nincs));
-			varsetp("def", fmtarr(tc->defpfx, tasks[i].defs, tasks[i].ndefs));
+			varpfxarr("CFLAGS", tc->incpfx, tasks[i].incs, tasks[i].nincs);
+			varpfxarr("CFLAGS", tc->defpfx, tasks[i].defs, tasks[i].ndefs);
 			taskvarset("CFLAGS", tasks[i].name);
 			taskvarset("LIBS", tasks[i].name);
 			taskvarset("LEFLAGS", tasks[i].name);
@@ -384,7 +386,7 @@ wantfound:;
 				varsetp("in", p2);
 				varsetp("out", p);
 				if (tasks[i].type != LIB)
-					varsetp("lib", fmtarr(tc->libpfx, tasks[i].libs, tasks[i].nlibs));
+					varpfxarr("LIBS", tc->libpfx, tasks[i].libs, tasks[i].nlibs);
 				p = varexpand(p3);
 				if (verbose)
 					puts(p);
