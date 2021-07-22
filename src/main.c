@@ -93,7 +93,7 @@ static void varpfxarr(const char *var, const char *pfx, char **arr, size_t len) 
 		free(out);
 		out = tmp;
 	}
-	varsetp(var, out);
+	varappend(var, out);
 }
 
 static void taskvarset(const char *var, const char *name) {
@@ -278,13 +278,13 @@ wantfound:;
 			varsetd("exe", tasks[i].type == EXE ? "1" : "0");
 			varsetd("lib", tasks[i].type == LIB ? "1" : "0");
 			varsetd("dll", tasks[i].type == DLL ? "1" : "0");
-			varpfxarr("CFLAGS", tc->incpfx, tasks[i].incs, tasks[i].nincs);
-			varpfxarr("CFLAGS", tc->defpfx, tasks[i].defs, tasks[i].ndefs);
 			taskvarset("CFLAGS", tasks[i].name);
 			taskvarset("LIBS", tasks[i].name);
 			taskvarset("LEFLAGS", tasks[i].name);
 			taskvarset("LLFLAGS", tasks[i].name);
 			taskvarset("LDFLAGS", tasks[i].name);
+			varpfxarr("CFLAGS", tc->incpfx, tasks[i].incs, tasks[i].nincs);
+			varpfxarr("CFLAGS", tc->defpfx, tasks[i].defs, tasks[i].ndefs);
 
 			for (size_t j = 0; j < tasks[i].nreqs; j++) {
 				asprintf(&p, "HAVE_%s", tasks[i].reqs[j]);
