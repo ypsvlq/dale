@@ -291,20 +291,23 @@ wantfound:;
 				if (!vargetnull(p)) {
 					free(p);
 					if (dalereq) {
-						asprintf(&p, "%s cflags %s", dalereq, tasks[i].reqs[j]);
-						p2 = hostexecout(p);
-						free(p);
-						if (p2) {
-							asprintf(&p3, "%s %s", varget("CFLAGS"), p2);
-							varsetp("CFLAGS", p3);
+						asprintf(&p2, "%s_NAME", tasks[i].reqs[j]);
+						p = vargetnull(p2);
+						free(p2);
+						if (!p)
+							p = tasks[i].reqs[j];
+						asprintf(&p2, "%s cflags %s", dalereq, p);
+						p3 = hostexecout(p2);
+						free(p2);
+						if (p3) {
+							varappend("CFLAGS", p3);
+							free(p3);
+							asprintf(&p2, "%s libs %s", dalereq, p);
+							p3 = hostexecout(p2);
 							free(p2);
-							asprintf(&p, "%s libs %s", dalereq, tasks[i].reqs[j]);
-							p2 = hostexecout(p);
-							free(p);
-							if (p2) {
-								asprintf(&p3, "%s %s", varget("LIBS"), p2);
-								varsetp("LIBS", p3);
-								free(p2);
+							if (p3) {
+								varappend("LIBS", p3);
+								free(p3);
 								continue;
 							}
 						}
@@ -401,11 +404,6 @@ wantfound:;
 				free(p2);
 			}
 			free(p);
-
-			for (size_t j = 0; j < tasks[i].nreqs; j++) {
-				varunset("CFLAGS");
-				varunset("LIBS");
-			}
 
 			varunset("task");
 			varunset("exe");
