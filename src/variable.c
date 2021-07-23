@@ -11,7 +11,7 @@ static struct var {
 	char *name, *val;
 } *tbl[BUCKETS];
 
-const char valid[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-+.";
+const char valid[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-+";
 
 static uint32_t hash(const char *str) {
 	uint32_t h = 0x811C9DC5;
