@@ -419,5 +419,7 @@ wantfound:;
 		}
 	}
 
+	if (dalereq && !vargetnull("DALEREQ"))
+		free(dalereq);
 	hostquit();
 }
