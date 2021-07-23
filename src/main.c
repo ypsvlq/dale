@@ -103,9 +103,20 @@ static void taskvarset(const char *var, const char *name) {
 	free(p);
 }
 
+static void globarr(char ***parr, size_t *psz) {
+	char **arr = *parr;
+	size_t sz = *psz;
+	*parr = NULL;
+	*psz = 0;
+	for (size_t j = 0; j < sz; j++) {
+		glob(arr[j], parr, psz);
+		free(arr[j]);
+	}
+	free(arr);
+}
+
 int main(int argc, char *argv[]) {
 	char *p, *p2, *p3, *p4;
-	char **arr;
 	struct tc *tc = NULL;
 	int skip;
 	size_t sz;
@@ -283,6 +294,8 @@ wantfound:;
 			taskvarset("LEFLAGS", tasks[i].name);
 			taskvarset("LLFLAGS", tasks[i].name);
 			taskvarset("LDFLAGS", tasks[i].name);
+			globarr(&tasks[i].srcs, &tasks[i].nsrcs);
+			globarr(&tasks[i].incs, &tasks[i].nincs);
 			varpfxarr("CFLAGS", tc->incpfx, tasks[i].incs, tasks[i].nincs);
 			varpfxarr("CFLAGS", tc->defpfx, tasks[i].defs, tasks[i].ndefs);
 
@@ -319,16 +332,6 @@ wantfound:;
 				}
 				free(p);
 			}
-
-			arr = tasks[i].srcs;
-			sz = tasks[i].nsrcs;
-			tasks[i].srcs = NULL;
-			tasks[i].nsrcs = 0;
-			for (size_t j = 0; j < sz; j++) {
-				glob(arr[j], &tasks[i].srcs, &tasks[i].nsrcs);
-				free(arr[j]);
-			}
-			free(arr);
 
 			skip = asprintf(&p, "%s/%s_obj", bdir, tasks[i].name);
 			hostmkdir(p);
