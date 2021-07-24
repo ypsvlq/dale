@@ -16,9 +16,9 @@ static const char *builtin[] = {
 "	incpfx: /I",
 "	defpfx: /D",
 "	compile: \"$CL\" $CFLAGS /M$[!msvc_staticcrt D]$[msvc_staticcrt T]$[dll  /LD]$[debug d /Zi /Fd:build/$task] $[optfast /O2] $[optsize /O1] /nologo /c /Fo:$out $in",
-"	linkexe: \"$LINK\" $LEFLAGS $[debug /DEBUG] /NOLOGO $lib /OUT:$out $in $LIBS",
+"	linkexe: \"$LINK\" $LEFLAGS $[debug /DEBUG] /NOLOGO /OUT:$out $in $LIBS",
 "	linklib: \"$LIB\" $LLFLAGS /NOLOGO /OUT:$out $in",
-"	linkdll: \"$LINK\" $LDFLAGS $[debug /DEBUG] /NOLOGO /DLL $lib /OUT:$out $in $LIBS",
+"	linkdll: \"$LINK\" $LDFLAGS $[debug /DEBUG] /NOLOGO /DLL /OUT:$out $in $LIBS",
 #endif
 "toolchain(clang)",
 "	lang: c",
