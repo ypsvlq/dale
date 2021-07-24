@@ -15,7 +15,7 @@ static const char *builtin[] = {
 "	libpfx: /DEFAULTLIB:",
 "	incpfx: /I",
 "	defpfx: /D",
-"	compile: \"$CL\" $CFLAGS /M$[!msvc_staticcrt D]$[msvc_staticcrt T]$[dll  /LD]$[debug d /Zi /Fd:build/$task] $[optfast /O2] $[optsize /O1] /nologo /c /Fo:$out $in",
+"	compile: \"$CL\" $CFLAGS /M$[!msvc_staticcrt D]$[msvc_staticcrt T]$[dll  /LD]$[debug d /Zi /Fd:$bdir/$task] $[optfast /O2] $[optsize /O1] /nologo /c /Fo:$out $in",
 "	linkexe: \"$LINK\" $LEFLAGS $[debug /DEBUG] /NOLOGO /OUT:$out $in $LIBS",
 "	linklib: \"$LIB\" $LLFLAGS /NOLOGO /OUT:$out $in",
 "	linkdll: \"$LINK\" $LDFLAGS $[debug /DEBUG] /NOLOGO /DLL /OUT:$out $in $LIBS",
