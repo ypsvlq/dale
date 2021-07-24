@@ -57,7 +57,8 @@ void hostquit(void) {
 void hostsetvars(void) {
 	varsetd("target", "windows");
 	varsetd("windows", "1");
-	varsetd("dllname", ".dll");
+	varsetd("exeext", ".exe");
+	varsetd("dllext", ".dll");
 }
 
 void hostmkdir(const char *path) {
@@ -194,7 +195,6 @@ bool hostisdir(const char *path) {
 char *hostexecout(const char *cmd) {
 	char *s, *s2;
 	FILE *p;
-	int status;
 
 	p = _popen(cmd, "r");
 	if (!p)
