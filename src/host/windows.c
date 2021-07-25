@@ -6,6 +6,8 @@
 #include "../dale.h"
 
 static UINT defaultcp;
+static WCHAR **pathexts;
+static size_t npathexts;
 
 static PWSTR mbtows(const char *s) {
 	PWSTR ws;
@@ -46,8 +48,25 @@ static char *winerr(void) {
 }
 
 void hostinit(void) {
+	static WCHAR exts[_MAX_ENV];
+	WCHAR *p, *ctx;
+
 	defaultcp = GetConsoleOutputCP();
 	SetConsoleOutputCP(CP_UTF8);
+
+	if (!GetEnvironmentVariableW(L"PATHEXT", exts, LEN(exts)))
+		err("Could not get PATHEXT: %s", winerr());
+	p = exts;
+	do {
+		npathexts++;
+		p++;
+	} while ((p = wcschr(p, L';')));
+	pathexts = xmalloc(sizeof(*pathexts) * npathexts);
+	p = wcstok_s(exts, L";", &ctx);
+	for (size_t i = 0; i < npathexts; i++) {
+		pathexts[i] = p;
+		p = wcstok_s(NULL, L";", &ctx);
+	}
 }
 
 void hostquit(void) {
@@ -82,26 +101,21 @@ void hostmkdir(const char *path) {
 
 char *hostfind(const char *name) {
 	PWSTR wpath;
-	WCHAR exts[_MAX_ENV];
-	WCHAR *p, *ctx;
 	size_t len;
 
 	wpath = xmalloc(MAX_PATH * sizeof(*wpath));
 	if (!MultiByteToWideChar(CP_UTF8, 0, name, -1, wpath, MAX_PATH))
 		err("MultiByteToWideChar '%s' failed", name);
-	if (!GetEnvironmentVariableW(L"PATHEXT", exts, LEN(exts)))
-		err("Could not get PATHEXT: %s", winerr());
 
 	len = wcslen(wpath);
-	p = wcstok_s(exts, L";", &ctx);
-	do {
-		if (len + wcslen(p) + 1 >= MAX_PATH)
+	for (size_t i = 0; i < npathexts; i++) {
+		if (len + wcslen(pathexts[i]) + 1 >= MAX_PATH)
 			continue;
-		wcscat(wpath, p);
+		wcscat(wpath, pathexts[i]);
 		if (PathFindOnPathW(wpath, NULL))
 			return wstomb(wpath);
 		wpath[len] = 0;
-	} while ((p = wcstok_s(NULL, L";", &ctx)));
+	}
 
 	free(wpath);
 	return NULL;
