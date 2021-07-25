@@ -162,10 +162,14 @@ static const char *readf(void *data) {
 }
 
 void parsef(const char *path, bool required) {
-	FILE *f;
-	char *path2;
-	asprintf(&path2, "%s.dale", path);
-	f = fopen(path2, "r");
+	FILE *f = NULL;
+	char *path2 = NULL;
+	size_t len = strlen(path);
+	if (len < 5 || memcmp(path + len - 5, ".dale", 5)) {
+		asprintf(&path2, "%s.dale", path);
+		f = fopen(path2, "r");
+		fname = path2;
+	}
 	if (!f) {
 		f = fopen(path, "r");
 		if (!f) {
@@ -175,8 +179,6 @@ void parsef(const char *path, bool required) {
 			return;
 		}
 		fname = path;
-	} else {
-		fname = path2;
 	}
 	parse(readf, f);
 	if (ferror(f))
