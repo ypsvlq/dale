@@ -61,6 +61,18 @@ void hostsetvars(void) {
 	varsetd("dllext", ".dll");
 }
 
+char **hostcfgs(void) {
+	static char *cfgs[2];
+	char *p;
+	if ((p = getenv("APPDATA"))) {
+		asprintf(&cfgs[0], "%s/Dale/global.dale", p);
+		cfgs[1] = NULL;
+	} else {
+		cfgs[0] = NULL;
+	}
+	return cfgs;
+}
+
 void hostmkdir(const char *path) {
 	PWSTR wpath = mbtows(path);
 	if (!CreateDirectoryW(wpath, NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
