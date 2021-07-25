@@ -120,6 +120,7 @@ int main(int argc, char *argv[]) {
 	struct tc *tc = NULL;
 	int skip;
 	size_t sz;
+	char **arr;
 	size_t taskn = 1;
 	char **want = NULL;
 	size_t nwant = 0;
@@ -171,6 +172,10 @@ int main(int argc, char *argv[]) {
 			want[nwant-1] = argv[i];
 		}
 	}
+
+	arr = hostcfgs();
+	for (char **p = arr; *p; p++)
+		parsef(*p, false);
 
 	if (!lflag) {
 		parsef("local.dale", false);

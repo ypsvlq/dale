@@ -54,6 +54,19 @@ void hostsetvars(void) {
 #endif
 }
 
+char **hostcfgs(void) {
+	static char *cfgs[3];
+	char *p;
+	cfgs[0] = "/etc/dale/global.dale";
+	if ((p = getenv("HOME"))) {
+		asprintf(&cfgs[1], "%s/.config/dale/global.dale", p);
+		cfgs[2] = NULL;
+	} else {
+		cfgs[1] = NULL;
+	}
+	return cfgs;
+}
+
 void hostmkdir(const char *path) {
 	if (mkdir(path, 0755) == -1 && errno != EEXIST)
 		err("mkdir: %s", strerror(errno));
