@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
 				case 'h':
 				case '?':
 					printf(
-						"usage: %s [options] [var=value]... [task]...\n"
+						"usage: %s [options] [var=value]... [var+=value]... [task]...\n"
 						"\n"
 						"options:\n"
 						"  -h         Show this help\n"
@@ -159,6 +159,11 @@ int main(int argc, char *argv[]) {
 					break;
 				default:
 					err("Unknown option '%s'", argv[i]);
+			}
+		} else if ((p = strstr(argv[i], "+="))) {
+			if (!pflag) {
+				p2 = xstrndup(argv[i], p - argv[i]);
+				varappend(p2, p+2);
 			}
 		} else if (strchr(argv[i], '=')) {
 			if (!pflag) {
@@ -187,7 +192,10 @@ int main(int argc, char *argv[]) {
 
 	if (pflag) {
 		for (int i = pflag; i < argc; i++) {
-			if (strchr(argv[i], '=')) {
+			if ((p = strstr(argv[i], "+="))) {
+				p2 = xstrndup(argv[i], p - argv[i]);
+				varappend(p2, p+2);
+			} else if (strchr(argv[i], '=')) {
 				sz = strcspn(argv[i], "=");
 				p = xstrndup(argv[i], sz);
 				p2 = xstrdup(argv[i] +  sz + 1);
