@@ -50,11 +50,13 @@ char *xstrndup(const char *s, size_t max) {
 int asprintf(char **outp, const char *fmt, ...) {
 	va_list ap, ap2;
 	int n;
+	char *p;
 	va_start(ap, fmt);
 	va_copy(ap2, ap);
 	n = vsnprintf(NULL, 0, fmt, ap2);
-	*outp = xmalloc(n + 1);
-	vsprintf(*outp, fmt, ap);
+	p = xmalloc(n + 1);
+	vsprintf(p, fmt, ap);
+	*outp = p;
 	va_end(ap2);
 	va_end(ap);
 	return n;
