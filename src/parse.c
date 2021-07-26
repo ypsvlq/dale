@@ -62,8 +62,6 @@ void parse(const char *(*read)(void *data), void *data) {
 				free(p2);
 				continue;
 			} else if (sscanf(p, "%[^( ] ( %[^)]", s1, s2) == 2) {
-				if (strlen(s2) != strspn(s2, valid))
-					err("Invalid name '%s'", s2);
 				if (!strcmp(s1, "toolchain")) {
 					state = TOOLCHAIN;
 					tcs = xrealloc(tcs, sizeof(*tcs) * ++ntcs);

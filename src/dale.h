@@ -47,8 +47,6 @@ extern size_t ntcs;
 extern const char *fname;
 extern size_t line;
 
-extern const char valid[];
-
 noreturn void err(const char *fmt, ...);
 
 void *xmalloc(size_t n);
