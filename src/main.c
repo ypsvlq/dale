@@ -46,28 +46,28 @@ static const char *builtin[] = {
 "	linkdll: \"$GCC\" $LDFLAGS -shared -o $out $in $LIBS",
 "toolchain(clang++)",
 "	lang: c++",
-"	find: clang++ ar",
+"	find: clang=clang++ ar",
 "	objext: .o",
 "	libext: .a",
 "	libpfx: -l",
 "	incpfx: -I",
 "	defpfx: -D",
-"	compile: \"$CLANG++\" $CFLAGS $[debug -g] $[optfast -O3] $[optsize -Oz] $[lib -fPIC] $[dll -fPIC] -c -o $out $in",
-"	linkexe: \"$CLANG++\" $LEFLAGS -o $out $in $LIBS",
+"	compile: \"$CLANG\" $CFLAGS $[debug -g] $[optfast -O3] $[optsize -Oz] $[lib -fPIC] $[dll -fPIC] -c -o $out $in",
+"	linkexe: \"$CLANG\" $LEFLAGS -o $out $in $LIBS",
 "	linklib: \"$AR\" -rc $LLFLAGS $out $in",
-"	linkdll: \"$CLANG++\" $LDFLAGS -shared -o $out $in $LIBS",
+"	linkdll: \"$CLANG\" $LDFLAGS -shared -o $out $in $LIBS",
 "toolchain(g++)",
 "	lang: c++",
-"	find: g++ ar",
+"	find: gcc=g++ ar",
 "	objext: .o",
 "	libext: .a",
 "	libpfx: -l",
 "	incpfx: -I",
 "	defpfx: -D",
-"	compile: \"$G++\" $CFLAGS $[debug -g] $[optfast -O3] $[optsize -Os] $[lib -fPIC] $[dll -fPIC] -c -o $out $in",
-"	linkexe: \"$G++\" $LEFLAGS -o $out $in $LIBS",
+"	compile: \"$GCC\" $CFLAGS $[debug -g] $[optfast -O3] $[optsize -Os] $[lib -fPIC] $[dll -fPIC] -c -o $out $in",
+"	linkexe: \"$GCC\" $LEFLAGS -o $out $in $LIBS",
 "	linklib: \"$AR\" -rc $LLFLAGS $out $in",
-"	linkdll: \"$G++\" $LDFLAGS -shared -o $out $in $LIBS",
+"	linkdll: \"$GCC\" $LDFLAGS -shared -o $out $in $LIBS",
 };
 
 struct task *tasks;
@@ -237,12 +237,20 @@ int main(int argc, char *argv[]) {
 		if (strcmp(tcs[i].lang, lang))
 			continue;
 		for (size_t j = 0; j < tcs[i].nfind; j++) {
-			p2 = upperstr(tcs[i].find[j]);
+			if ((p3 = strchr(tcs[i].find[j], '='))) {
+				p = xstrndup(tcs[i].find[j], p3 - tcs[i].find[j]);
+				puts(p);
+				p2 = upperstr(p);
+				free(p);
+			} else {
+				p3 = NULL;
+				p2 = upperstr(tcs[i].find[j]);
+			}
 			if (vargetnull(p2)) {
 				free(p2);
 				continue;
 			}
-			p = hostfind(tcs[i].find[j]);
+			p = hostfind(p3 ? p3+1 : tcs[i].find[j]);
 			if (p) {
 				varset(p2, p);
 				if (j+1 == tcs[i].nfind)
