@@ -127,6 +127,7 @@ int main(int argc, char *argv[]) {
 	char **lflag = NULL;
 	size_t nlflag = 0;
 	int pflag = 0;
+	bool Lflag = false;
 	char *bscript, *bdir, *tcname, *dalereq, *lang;
 	bool verbose;
 	char *exeext, *dllext;
@@ -145,6 +146,7 @@ int main(int argc, char *argv[]) {
 						"  -h         Show this help\n"
 						"  -l <file>  Load localscript from path, can be repeated to specify multiple\n"
 						"  -p         Process following var=value args after localscript(s)\n"
+						"  -L         Don't load global.dale\n"
 					, argv[0]);
 					return 0;
 				case 'l':
@@ -156,6 +158,9 @@ int main(int argc, char *argv[]) {
 						fprintf(stderr, "Warning: '-p' option used multiple times\n");
 					else
 						pflag = i+1;
+					break;
+				case 'L':
+					Lflag = true;
 					break;
 				default:
 					err("Unknown option '%s'", argv[i]);
@@ -178,9 +183,11 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	arr = hostcfgs();
-	for (char **p = arr; *p; p++)
-		parsef(*p, false);
+	if (!Lflag) {
+		arr = hostcfgs();
+		for (char **p = arr; *p; p++)
+			parsef(*p, false);
+	}
 
 	if (!lflag) {
 		parsef("local.dale", false);
