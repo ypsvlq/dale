@@ -128,7 +128,7 @@ int main(int argc, char *argv[]) {
 	size_t nlflag = 0;
 	int pflag = 0;
 	bool Lflag = false;
-	char *bscript, *bdir, *tcname, *dalereq, *lang;
+	char *bscript, *bdir, *tcname, *reqcflags, *reqlibs, *lang;
 	bool verbose;
 	char *exeext, *dllext;
 
@@ -224,10 +224,8 @@ int main(int argc, char *argv[]) {
 		bdir = "build";
 	tcname = vargetnull("tcname");
 	verbose = vargetnull("verbose");
-	dalereq = NULL;
-	if (!vargetnull("nodalereq"))
-		if (!(dalereq = vargetnull("DALEREQ")))
-			dalereq = hostfind("dalereq");
+	reqcflags = vargetnull("reqcflags");
+	reqlibs = vargetnull("reqlibs");
 
 	parsef(bscript, true);
 	lang = vargetnull("lang");
@@ -331,27 +329,24 @@ wantfound:;
 				asprintf(&p, "HAVE_%s", tasks[i].reqs[j]);
 				if (!vargetnull(p)) {
 					free(p);
-					if (dalereq) {
-						asprintf(&p2, "%s_NAME", tasks[i].reqs[j]);
-						p = vargetnull(p2);
-						free(p2);
-						if (!p)
-							p = tasks[i].reqs[j];
-						asprintf(&p2, "%s cflags %s", dalereq, p);
-						p3 = hostexecout(p2);
-						free(p2);
-						if (p3) {
-							varappend("CFLAGS", p3);
-							free(p3);
-							asprintf(&p2, "%s libs %s", dalereq, p);
-							p3 = hostexecout(p2);
+					if (reqcflags && reqlibs) {
+						varset("name", tasks[i].reqs[j]);
+						p = varexpand(reqcflags);
+						p2 = hostexecout(p);
+						free(p);
+						if (p2) {
+							varappend("CFLAGS", p2);
 							free(p2);
-							if (p3) {
-								varappend("LIBS", p3);
-								free(p3);
+							p = varexpand(reqlibs);
+							p2 = hostexecout(p);
+							free(p);
+							if (p2) {
+								varappend("LIBS", p2);
+								free(p2);
 								continue;
 							}
 						}
+						varunset("name");
 					}
 					err("Required library '%s' not defined", tasks[i].reqs[j]);
 				} else {
@@ -450,7 +445,5 @@ wantfound:;
 		}
 	}
 
-	if (dalereq && !vargetnull("DALEREQ"))
-		free(dalereq);
 	hostquit();
 }
