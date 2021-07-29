@@ -74,10 +74,10 @@ void hostquit(void) {
 }
 
 void hostsetvars(void) {
-	varsetd("target", "windows");
-	varsetd("windows", "1");
-	varsetd("exeext", ".exe");
-	varsetd("dllext", ".dll");
+	varsetd("_target", "windows");
+	varsetd("_windows", "1");
+	varsetd("_exeext", ".exe");
+	varsetd("_dllext", ".dll");
 }
 
 char **hostcfgs(void) {

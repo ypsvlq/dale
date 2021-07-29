@@ -211,24 +211,24 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	if (*varget("nodefvar") != '1')
+	if (*varget("_nodefvar") != '1')
 		hostsetvars();
-	if (*varget("nodeftc") != '1')
+	if (*varget("_nodeftc") != '1')
 		parsea(builtin, LEN(builtin));
 
-	bscript = vargetnull("bscript");
+	bscript = vargetnull("_bscript");
 	if (!bscript)
 		bscript = "build.dale";
-	bdir = vargetnull("bdir");
+	bdir = vargetnull("_bdir");
 	if (!bdir)
 		bdir = "build";
-	tcname = vargetnull("tcname");
-	verbose = vargetnull("verbose");
-	reqcflags = vargetnull("reqcflags");
-	reqlibs = vargetnull("reqlibs");
+	tcname = vargetnull("_tcname");
+	verbose = vargetnull("_verbose");
+	reqcflags = vargetnull("_reqcflags");
+	reqlibs = vargetnull("_reqlibs");
 
 	parsef(bscript, true);
-	lang = vargetnull("lang");
+	lang = vargetnull("_lang");
 	if (!lang)
 		lang = "c";
 
@@ -287,8 +287,8 @@ int main(int argc, char *argv[]) {
 	}
 	printf("Using toolchain '%s'\n", tc->name);
 
-	exeext = varget("exeext");
-	dllext = varget("dllext");
+	exeext = varget("_exeext");
+	dllext = varget("_dllext");
 
 	for (size_t i = 0; i < nwant; i++) {
 		for (size_t j = 0; j < ntasks; j++) {

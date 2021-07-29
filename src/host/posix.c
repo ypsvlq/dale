@@ -38,19 +38,19 @@ void hostquit(void) {
 }
 
 void hostsetvars(void) {
-	varsetd("target", "posix");
-	varsetd("posix", "1");
-	varsetd("dllext", ".so");
+	varsetd("_target", "posix");
+	varsetd("_posix", "1");
+	varsetd("_dllext", ".so");
 #if defined __linux__
-	varsetd("linux", "1");
+	varsetd("_linux", "1");
 #elif defined __OpenBSD__
-	varsetd("openbsd", "1");
+	varsetd("_openbsd", "1");
 #elif defined __NetBSD__
-	varsetd("netbsd", "1");
+	varsetd("_netbsd", "1");
 #elif defined __FreeBSD__
-	varsetd("freebsd", "1");
+	varsetd("_freebsd", "1");
 #elif defined __DragonFly__
-	varsetd("dragonflybsd", "1");
+	varsetd("_dragonflybsd", "1");
 #endif
 }
 
