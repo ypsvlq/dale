@@ -330,7 +330,7 @@ wantfound:;
 				if (!vargetnull(p)) {
 					free(p);
 					if (reqcflags && reqlibs) {
-						varset("name", tasks[i].reqs[j]);
+						varsetd("name", tasks[i].reqs[j]);
 						p = varexpand(reqcflags);
 						p2 = hostexecout(p);
 						free(p);
@@ -343,10 +343,10 @@ wantfound:;
 							if (p2) {
 								varappend("LIBS", p2);
 								free(p2);
+								varunset("name");
 								continue;
 							}
 						}
-						varunset("name");
 					}
 					err("Required library '%s' not defined", tasks[i].reqs[j]);
 				} else {
