@@ -330,7 +330,12 @@ wantfound:;
 				if (!vargetnull(p)) {
 					free(p);
 					if (reqcflags && reqlibs) {
-						varsetd("name", tasks[i].reqs[j]);
+						asprintf(&p2, "%s_NAME", tasks[i].reqs[j]);
+						p = vargetnull(p2);
+						free(p2);
+						if (!p)
+							p = tasks[i].reqs[j];
+						varsetd("name", p);
 						p = varexpand(reqcflags);
 						p2 = hostexecout(p);
 						free(p);
