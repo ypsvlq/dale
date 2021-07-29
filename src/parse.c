@@ -87,6 +87,8 @@ void parse(const char *(*read)(void *data), void *data) {
 					}};
 					continue;
 				} else {
+					if (strlen(s2) != strspn(s2, valid))
+						err("Invalid task name '%s'", s2);
 					state = TASK;
 					tasks = xrealloc(tasks, sizeof(*tasks) * ++ntasks);
 					task = &tasks[ntasks-1];
