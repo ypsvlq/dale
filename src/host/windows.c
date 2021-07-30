@@ -218,6 +218,51 @@ bool hostisdir(const char *path) {
 	return ret;
 }
 
+struct tdata {
+	CRITICAL_SECTION cs;
+	char **cmds;
+	char **msgs;
+	size_t len;
+};
+
+static DWORD WINAPI thread(LPVOID tdata) {
+	struct tdata *data = tdata;
+	char *p;
+	int status;
+	while (1) {
+		EnterCriticalSection(&data->cs);
+		if (!data->len) {
+			LeaveCriticalSection(&data->cs);
+			return 0;
+		}
+		puts(*data->msgs++);
+		p = *data->cmds++;
+		data->len--;
+		LeaveCriticalSection(&data->cs);
+		if ((status = system(p)))
+			err("Command failed (exit code %d)", status);
+	}
+}
+
+void hostexec(char **cmds, char **msgs, size_t len, int jobs) {
+	SYSTEM_INFO si;
+	HANDLE *threads;
+	struct tdata data = {.cmds = cmds, .msgs = msgs, .len = len};
+
+	if (!jobs) {
+		GetSystemInfo(&si);
+		jobs = si.dwNumberOfProcessors;
+	}
+
+	InitializeCriticalSection(&data.cs);
+	threads = xmalloc(jobs * sizeof(*threads));
+	for (int i = 0; i < jobs; i++)
+		threads[i] = CreateThread(NULL, 0, thread, &data, 0, NULL);
+	WaitForMultipleObjects(jobs, threads, true, INFINITE);
+	DeleteCriticalSection(&data.cs);
+	free(threads);
+}
+
 char *hostexecout(const char *cmd) {
 	char *s, *s2;
 	FILE *p;
