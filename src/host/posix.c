@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <pthread.h>
 #include "../dale.h"
 
 static char **pathdirs;
@@ -123,6 +124,59 @@ bool hostisdir(const char *path) {
 	if (stat(path, &sb) == -1)
 		err("stat '%s': %s", path, strerror(errno));
 	return S_ISDIR(sb.st_mode);
+}
+
+struct tdata {
+	pthread_mutex_t mtx;
+	char **cmds;
+	char **msgs;
+	size_t len;
+};
+
+static void *thread(void *tdata) {
+	struct tdata *data = tdata;
+	char *p;
+	int status;
+	while (1) {
+		if (pthread_mutex_lock(&data->mtx))
+			err("pthread_mutex_lock: %s", strerror(errno));
+		if (!data->len) {
+			pthread_mutex_unlock(&data->mtx);
+			return 0;
+		}
+		puts(*data->msgs++);
+		p = *data->cmds++;
+		data->len--;
+		if (pthread_mutex_unlock(&data->mtx))
+			err("pthread_mutex_unlock: %s", strerror(errno));
+		if ((status = system(p)))
+			err("Command failed (exit code %d)", status);
+	}
+}
+
+void hostexec(char **cmds, char **msgs, size_t len, int jobs) {
+	pthread_t *thrds;
+	struct tdata data = {.cmds = cmds, .msgs = msgs, .len = len};
+
+	if (!jobs) {
+#if defined __linux__ || defined __OpenBSD__ || defined __NetBSD__ || defined __FreeBSD__ || defined __DragonFly__
+		jobs = sysconf(_SC_NPROCESSORS_ONLN);
+#else
+		jobs = 1;
+#endif
+	}
+
+	if (pthread_mutex_init(&data.mtx, NULL))
+		err("pthread_mutex_init: %s", strerror(errno));
+
+	thrds = xmalloc(jobs * sizeof(*thrds));
+	for (int i = 0; i < jobs; i++)
+		pthread_create(&thrds[i], NULL, thread, &data);
+	for (int i = 0; i < jobs; i++)
+		pthread_join(thrds[i], NULL);
+
+	pthread_mutex_destroy(&data.mtx);
+	free(thrds);
 }
 
 char *hostexecout(const char *cmd) {

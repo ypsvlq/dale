@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
 	struct tc *tc = NULL;
 	int skip;
 	size_t sz;
-	char **arr;
+	char **arr, **msgs;
 	size_t taskn = 1;
 	char **want = NULL;
 	size_t nwant = 0;
@@ -129,6 +129,7 @@ int main(int argc, char *argv[]) {
 	int pflag = 0;
 	bool Lflag = false;
 	char *bscript, *bdir, *tcname, *reqcflags, *reqlibs, *lang;
+	int jobs;
 	bool verbose;
 	char *exeext, *dllext;
 
@@ -226,6 +227,8 @@ int main(int argc, char *argv[]) {
 	verbose = vargetnull("_verbose");
 	reqcflags = vargetnull("_reqcflags");
 	reqlibs = vargetnull("_reqlibs");
+	p = vargetnull("_jobs");
+	jobs = p ? strtol(p, NULL, 10) : 0;
 
 	parsef(bscript, true);
 	lang = vargetnull("_lang");
@@ -376,6 +379,10 @@ wantfound:;
 				free(p);
 			}
 
+			arr = NULL;
+			msgs = NULL;
+			sz = 0;
+
 			p2 = xstrdup("");
 			for (size_t j = 0; j < tasks[i].nsrcs; j++) {
 				asprintf(&p, "%s/%s_obj/%s%s", bdir, tasks[i].name, tasks[i].srcs[j], tc->objext);
@@ -384,20 +391,33 @@ wantfound:;
 				p2 = p3;
 				if (hostfnewer(tasks[i].srcs[j], p)) {
 					tasks[i].link = true;
-					if (!verbose)
-						printf("=> Compiling %s\n", tasks[i].srcs[j]);
 					varsetd("in", tasks[i].srcs[j]);
 					varsetp("out", p);
-					p = varexpand(tc->compile);
-					if (verbose)
-						puts(p);
-					if (system(p))
-						err("Compilation failed");
+					sz++;
+					arr = xrealloc(arr, sizeof(*arr) * sz);
+					arr[sz-1] = varexpand(tc->compile);
 					varunset("in");
 					varunset("out");
+					msgs = xrealloc(msgs, sizeof(*msgs) * sz);
+					if (!verbose)
+						asprintf(&msgs[sz-1], "=> Compiling %s", tasks[i].srcs[j]);
+					else
+						msgs[sz-1] = arr[sz-1];
+				} else {
+					free(p);
 				}
-				free(p);
 			}
+
+			if (arr)
+				hostexec(arr, msgs, sz, jobs);
+
+			for (size_t i = 0; i < sz; i++) {
+				free(arr[i]);
+				if (!verbose)
+					free(msgs[i]);
+			}
+			free(arr);
+			free(msgs);
 
 			switch (tasks[i].type) {
 				case EXE:
