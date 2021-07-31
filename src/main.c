@@ -94,6 +94,7 @@ static void varpfxarr(const char *var, const char *pfx, char **arr, size_t len) 
 		out = tmp;
 	}
 	varappend(var, out);
+	free(out);
 }
 
 static void taskvarset(const char *var, const char *name) {
