@@ -166,6 +166,9 @@ void hostexec(char **cmds, char **msgs, size_t len, int jobs) {
 #endif
 	}
 
+	if ((size_t)jobs > len)
+		jobs = len;
+
 	if (pthread_mutex_init(&data.mtx, NULL))
 		err("pthread_mutex_init: %s", strerror(errno));
 

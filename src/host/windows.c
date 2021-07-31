@@ -254,6 +254,9 @@ void hostexec(char **cmds, char **msgs, size_t len, int jobs) {
 		jobs = si.dwNumberOfProcessors;
 	}
 
+	if ((size_t)jobs > len)
+		jobs = len;
+
 	InitializeCriticalSection(&data.cs);
 	threads = xmalloc(jobs * sizeof(*threads));
 	for (int i = 0; i < jobs; i++)
