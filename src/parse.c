@@ -61,6 +61,11 @@ static void parse(const char *(*read)(void *data), void *data) {
 				varappend(s1, p2);
 				free(p2);
 				continue;
+			} else if (sscanf(p, "%[^? ] ?= %[^\n]", s1, s2) == 2) {
+				state = NONE;
+				if (!vargetnull(s1))
+					varsetp(s1, varexpand(s2));
+				continue;
 			} else if (sscanf(p, "%[^( ] ( %[^)]", s1, s2) == 2) {
 				if (!strcmp(s1, "toolchain")) {
 					state = TOOLCHAIN;
