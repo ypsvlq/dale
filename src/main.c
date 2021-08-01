@@ -140,6 +140,8 @@ int main(int argc, char *argv[]) {
 
 	for (int i = 1; i < argc; i++) {
 		if (argv[i][0] == '-') {
+			if (strchr("lg", argv[i][1]) && !argv[i+1])
+				err("Option '-%c' requires an argument", argv[i][1]);
 			switch (argv[i][1]) {
 				case 'h':
 				case '?':
