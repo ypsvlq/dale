@@ -7,71 +7,6 @@
 #include <errno.h>
 #include "dale.h"
 
-static const char *builtin[] = {
-#ifdef _WIN32
-"toolchain(msvc)",
-"	lang: c",
-"	find: cl link lib",
-"	objext: .obj",
-"	libext: .lib",
-"	libpfx: /DEFAULTLIB:",
-"	incpfx: /I",
-"	defpfx: /D",
-"	compile: \"$CL\" $CFLAGS /M$[!msvc_staticcrt D]$[msvc_staticcrt T]$[dll  /LD]$[debug d /Zi /FS /Fd:$_bdir/$task] $[optfast /O2] $[optsize /O1] /nologo /c /Fo:$out $in",
-"	linkexe: \"$LINK\" $LEFLAGS $[debug /DEBUG] /NOLOGO /OUT:$out $in $LIBS",
-"	linklib: \"$LIB\" $LLFLAGS /NOLOGO /OUT:$out $in",
-"	linkdll: \"$LINK\" $LDFLAGS $[debug /DEBUG] /NOLOGO /DLL /OUT:$out $in $LIBS",
-#endif
-"toolchain(clang)",
-"	lang: c",
-"	find: clang ar",
-"	objext: .o",
-"	libext: .a",
-"	libpfx: -l",
-"	incpfx: -I",
-"	defpfx: -D",
-"	compile: \"$CLANG\" $CFLAGS $[debug -g] $[optfast -O3] $[optsize -Oz] $[lib -fPIC] $[dll -fPIC] -c -o $out $in",
-"	linkexe: \"$CLANG\" $LEFLAGS -o $out $in $LIBS",
-"	linklib: \"$AR\" -rc $LLFLAGS $out $in",
-"	linkdll: \"$CLANG\" $LDFLAGS -shared -o $out $in $LIBS",
-"toolchain(gcc)",
-"	lang: c",
-"	find: gcc ar",
-"	objext: .o",
-"	libext: .a",
-"	libpfx: -l",
-"	incpfx: -I",
-"	defpfx: -D",
-"	compile: \"$GCC\" $CFLAGS $[debug -g] $[optfast -O3] $[optsize -Os] $[lib -fPIC] $[dll -fPIC] -c -o $out $in",
-"	linkexe: \"$GCC\" $LEFLAGS -o $out $in $LIBS",
-"	linklib: \"$AR\" -rc $LLFLAGS $out $in",
-"	linkdll: \"$GCC\" $LDFLAGS -shared -o $out $in $LIBS",
-"toolchain(clang++)",
-"	lang: c++",
-"	find: clang=clang++ ar",
-"	objext: .o",
-"	libext: .a",
-"	libpfx: -l",
-"	incpfx: -I",
-"	defpfx: -D",
-"	compile: \"$CLANG\" $CFLAGS $[debug -g] $[optfast -O3] $[optsize -Oz] $[lib -fPIC] $[dll -fPIC] -c -o $out $in",
-"	linkexe: \"$CLANG\" $LEFLAGS -o $out $in $LIBS",
-"	linklib: \"$AR\" -rc $LLFLAGS $out $in",
-"	linkdll: \"$CLANG\" $LDFLAGS -shared -o $out $in $LIBS",
-"toolchain(g++)",
-"	lang: c++",
-"	find: gcc=g++ ar",
-"	objext: .o",
-"	libext: .a",
-"	libpfx: -l",
-"	incpfx: -I",
-"	defpfx: -D",
-"	compile: \"$GCC\" $CFLAGS $[debug -g] $[optfast -O3] $[optsize -Os] $[lib -fPIC] $[dll -fPIC] -c -o $out $in",
-"	linkexe: \"$GCC\" $LEFLAGS -o $out $in $LIBS",
-"	linklib: \"$AR\" -rc $LLFLAGS $out $in",
-"	linkdll: \"$GCC\" $LDFLAGS -shared -o $out $in $LIBS",
-};
-
 struct task *tasks;
 size_t ntasks;
 struct tc *tcs;
@@ -240,8 +175,6 @@ int main(int argc, char *argv[]) {
 
 	if (*varget("_nodefvar") != '1')
 		hostsetvars();
-	if (*varget("_nodeftc") != '1')
-		parsea(builtin, LEN(builtin));
 
 	bscript = vargetnull("_bscript");
 	if (!bscript)
