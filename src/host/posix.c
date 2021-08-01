@@ -154,7 +154,7 @@ static void *thread(void *tdata) {
 	}
 }
 
-void hostexec(char **cmds, char **msgs, size_t len, int jobs) {
+void hostexec(char **cmds, char **msgs, size_t len, size_t jobs) {
 	pthread_t *thrds;
 	struct tdata data = {.cmds = cmds, .msgs = msgs, .len = len};
 
@@ -166,16 +166,16 @@ void hostexec(char **cmds, char **msgs, size_t len, int jobs) {
 #endif
 	}
 
-	if ((size_t)jobs > len)
+	if (jobs > len)
 		jobs = len;
 
 	if (pthread_mutex_init(&data.mtx, NULL))
 		err("pthread_mutex_init: %s", strerror(errno));
 
 	thrds = xmalloc(jobs * sizeof(*thrds));
-	for (int i = 0; i < jobs; i++)
+	for (size_t i = 0; i < jobs; i++)
 		pthread_create(&thrds[i], NULL, thread, &data);
-	for (int i = 0; i < jobs; i++)
+	for (size_t i = 0; i < jobs; i++)
 		pthread_join(thrds[i], NULL);
 
 	pthread_mutex_destroy(&data.mtx);

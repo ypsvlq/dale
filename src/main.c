@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
+#include <inttypes.h>
+#include <errno.h>
 #include "dale.h"
 
 static const char *builtin[] = {
@@ -132,7 +134,8 @@ int main(int argc, char *argv[]) {
 	size_t ngflag = 0;
 	bool Gflag = false;
 	char *bscript, *bdir, *tcname, *reqcflags, *reqlibs, *lang;
-	int jobs;
+	size_t jobs;
+	uintmax_t um;
 	bool verbose;
 	char *exeext, *dllext;
 
@@ -251,7 +254,15 @@ int main(int argc, char *argv[]) {
 	reqcflags = vargetnull("_reqcflags");
 	reqlibs = vargetnull("_reqlibs");
 	p = vargetnull("_jobs");
-	jobs = p ? strtol(p, NULL, 10) : 0;
+	if (p) {
+		errno = 0;
+		um = strtoumax(p, NULL, 10);
+		if (um > SIZE_MAX || errno == ERANGE)
+			err("Overflow");
+		jobs = um;
+	} else {
+		jobs = 0;
+	}
 
 	parsef(bscript, true);
 	lang = vargetnull("_lang");

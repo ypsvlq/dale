@@ -244,7 +244,7 @@ static DWORD WINAPI thread(LPVOID tdata) {
 	}
 }
 
-void hostexec(char **cmds, char **msgs, size_t len, int jobs) {
+void hostexec(char **cmds, char **msgs, size_t len, size_t jobs) {
 	SYSTEM_INFO si;
 	HANDLE *threads;
 	struct tdata data = {.cmds = cmds, .msgs = msgs, .len = len};
@@ -254,12 +254,12 @@ void hostexec(char **cmds, char **msgs, size_t len, int jobs) {
 		jobs = si.dwNumberOfProcessors;
 	}
 
-	if ((size_t)jobs > len)
+	if (jobs > len)
 		jobs = len;
 
 	InitializeCriticalSection(&data.cs);
 	threads = xmalloc(jobs * sizeof(*threads));
-	for (int i = 0; i < jobs; i++)
+	for (size_t i = 0; i < jobs; i++)
 		threads[i] = CreateThread(NULL, 0, thread, &data, 0, NULL);
 	WaitForMultipleObjects(jobs, threads, true, INFINITE);
 	DeleteCriticalSection(&data.cs);
