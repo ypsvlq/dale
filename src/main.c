@@ -125,10 +125,12 @@ int main(int argc, char *argv[]) {
 	size_t taskn = 1;
 	char **want = NULL;
 	size_t nwant = 0;
+	int pflag = 0;
 	char **lflag = NULL;
 	size_t nlflag = 0;
-	int pflag = 0;
-	bool Lflag = false;
+	char **gflag = NULL;
+	size_t ngflag = 0;
+	bool Gflag = false;
 	char *bscript, *bdir, *tcname, *reqcflags, *reqlibs, *lang;
 	int jobs;
 	bool verbose;
@@ -146,23 +148,28 @@ int main(int argc, char *argv[]) {
 						"\n"
 						"options:\n"
 						"  -h         Show this help\n"
-						"  -l <file>  Load localscript from path, can be repeated to specify multiple\n"
 						"  -p         Process following var=value args after localscript(s)\n"
-						"  -L         Don't load global.dale\n"
+						"  -l <file>  Load localscript from path, can be repeated to specify multiple\n"
+						"  -g <name>  Load named globalscript\n"
+						"  -G         Don't load global.dale\n"
 					, argv[0]);
 					return 0;
-				case 'l':
-					lflag = xrealloc(lflag, sizeof(*lflag) * ++nlflag);
-					lflag[nlflag-1] = argv[++i];
-					break;
 				case 'p':
 					if (pflag)
 						fprintf(stderr, "Warning: '-p' option used multiple times\n");
 					else
 						pflag = i+1;
 					break;
-				case 'L':
-					Lflag = true;
+				case 'l':
+					lflag = xrealloc(lflag, sizeof(*lflag) * ++nlflag);
+					lflag[nlflag-1] = argv[++i];
+					break;
+				case 'g':
+					gflag = xrealloc(gflag, sizeof(*gflag) * ++ngflag);
+					gflag[ngflag-1] = argv[++i];
+					break;
+				case 'G':
+					Gflag = true;
 					break;
 				default:
 					err("Unknown option '%s'", argv[i]);
@@ -185,10 +192,23 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	if (!Lflag) {
+	if (!Gflag || gflag) {
 		arr = hostcfgs();
-		for (char **p = arr; *p; p++)
-			parsef(*p, false);
+		for (char **pdir = arr; *pdir; pdir++) {
+			if (!Gflag) {
+				asprintf(&p, "%s/global.dale", *pdir);
+				parsef(p, false);
+				free(p);
+			}
+			if (gflag && !*(pdir+1)) {
+				for (size_t i = 0; i < ngflag; i++) {
+					asprintf(&p, "%s/%s.dale", *pdir, gflag[i]);
+					parsef(p, true);
+					free(p);
+				}
+			}
+		}
+		free(gflag);
 	}
 
 	if (!lflag) {

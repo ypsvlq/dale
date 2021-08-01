@@ -84,7 +84,7 @@ char **hostcfgs(void) {
 	static char *cfgs[2];
 	char *p;
 	if ((p = getenv("APPDATA"))) {
-		asprintf(&cfgs[0], "%s/Dale/global.dale", p);
+		asprintf(&cfgs[0], "%s/Dale", p);
 		cfgs[1] = NULL;
 	} else {
 		cfgs[0] = NULL;

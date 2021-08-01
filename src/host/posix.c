@@ -58,9 +58,9 @@ void hostsetvars(void) {
 char **hostcfgs(void) {
 	static char *cfgs[3];
 	char *p;
-	cfgs[0] = "/etc/dale/global.dale";
+	cfgs[0] = "/etc/dale";
 	if ((p = getenv("HOME"))) {
-		asprintf(&cfgs[1], "%s/.config/dale/global.dale", p);
+		asprintf(&cfgs[1], "%s/.config/dale", p);
 		cfgs[2] = NULL;
 	} else {
 		cfgs[1] = NULL;
