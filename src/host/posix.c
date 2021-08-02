@@ -74,13 +74,20 @@ void hostmkdir(const char *path) {
 }
 
 char *hostfind(const char *name) {
-	char *buf;
+	char *buf, *qbuf;
 	for (size_t i = 0; i < npathdirs; i++) {
 		asprintf(&buf, "%s/%s", pathdirs[i], name);
-		if (!faccessat(AT_FDCWD, buf, X_OK, AT_EACCESS))
-			return buf;
-		else if (errno != ENOENT)
+		if (!faccessat(AT_FDCWD, buf, X_OK, AT_EACCESS)) {
+			if (strpbrk(buf, " ")) {
+				asprintf(&qbuf, "\"%s\"", buf);
+				free(buf);
+				return qbuf;
+			} else {
+				return buf;
+			}
+		} else if (errno != ENOENT) {
 			err("faccessat '%s': %s", buf, strerror(errno));
+		}
 		free(buf);
 	}
 	return NULL;

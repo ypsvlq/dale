@@ -101,6 +101,7 @@ void hostmkdir(const char *path) {
 
 char *hostfind(const char *name) {
 	PWSTR wpath;
+	char *path, *qpath;
 	size_t len;
 
 	wpath = xmalloc(MAX_PATH * sizeof(*wpath));
@@ -112,8 +113,16 @@ char *hostfind(const char *name) {
 		if (len + wcslen(pathexts[i]) + 1 >= MAX_PATH)
 			continue;
 		wcscat(wpath, pathexts[i]);
-		if (PathFindOnPathW(wpath, NULL))
-			return wstomb(wpath);
+		if (PathFindOnPathW(wpath, NULL)) {
+			path = wstomb(wpath);
+			if (strpbrk(path, " ")) {
+				asprintf(&qpath, "\"%s\"", path);
+				free(path);
+				return qpath;
+			} else {
+				return path;
+			}
+		}
 		wpath[len] = 0;
 	}
 
