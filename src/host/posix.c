@@ -75,7 +75,7 @@ void hostmkdir(const char *path) {
 
 char *hostfind(const char *name) {
 	char *buf;
-	for (size_t i = 0; pathdirs[i]; i++) {
+	for (size_t i = 0; i < npathdirs; i++) {
 		asprintf(&buf, "%s/%s", pathdirs[i], name);
 		if (!faccessat(AT_FDCWD, buf, X_OK, AT_EACCESS))
 			return buf;
