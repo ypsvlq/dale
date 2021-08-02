@@ -74,21 +74,21 @@ void hostmkdir(const char *path) {
 }
 
 char *hostfind(const char *name) {
-	char *buf, *qbuf;
+	char *path, *qpath;
 	for (size_t i = 0; i < npathdirs; i++) {
-		asprintf(&buf, "%s/%s", pathdirs[i], name);
-		if (!faccessat(AT_FDCWD, buf, X_OK, AT_EACCESS)) {
-			if (strpbrk(buf, " ")) {
-				asprintf(&qbuf, "\"%s\"", buf);
-				free(buf);
-				return qbuf;
+		asprintf(&path, "%s/%s", pathdirs[i], name);
+		if (!faccessat(AT_FDCWD, path, X_OK, AT_EACCESS)) {
+			if (strpbrk(path, " ")) {
+				asprintf(&qpath, "\"%s\"", path);
+				free(path);
+				return qpath;
 			} else {
-				return buf;
+				return path;
 			}
 		} else if (errno != ENOENT) {
-			err("faccessat '%s': %s", buf, strerror(errno));
+			err("faccessat '%s': %s", path, strerror(errno));
 		}
-		free(buf);
+		free(path);
 	}
 	return NULL;
 }
@@ -162,7 +162,7 @@ static void *thread(void *tdata) {
 }
 
 void hostexec(char **cmds, char **msgs, size_t len, size_t jobs) {
-	pthread_t *thrds;
+	pthread_t *threads;
 	struct tdata data = {.cmds = cmds, .msgs = msgs, .len = len};
 
 	if (!jobs) {
@@ -179,14 +179,14 @@ void hostexec(char **cmds, char **msgs, size_t len, size_t jobs) {
 	if (pthread_mutex_init(&data.mtx, NULL))
 		err("pthread_mutex_init: %s", strerror(errno));
 
-	thrds = xmalloc(jobs * sizeof(*thrds));
+	threads = xmalloc(jobs * sizeof(*threads));
 	for (size_t i = 0; i < jobs; i++)
-		pthread_create(&thrds[i], NULL, thread, &data);
+		pthread_create(&threads[i], NULL, thread, &data);
 	for (size_t i = 0; i < jobs; i++)
-		pthread_join(thrds[i], NULL);
+		pthread_join(threads[i], NULL);
 
 	pthread_mutex_destroy(&data.mtx);
-	free(thrds);
+	free(threads);
 }
 
 char *hostexecout(const char *cmd) {
