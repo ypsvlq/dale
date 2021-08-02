@@ -115,7 +115,7 @@ char *hostfind(const char *name) {
 		wcscat(wpath, pathexts[i]);
 		if (PathFindOnPathW(wpath, NULL)) {
 			path = wstomb(wpath);
-			if (strpbrk(path, " ")) {
+			if (strpbrk(path, " \t&[]{}^=;!'+,`~")) {
 				asprintf(&qpath, "\"%s\"", path);
 				free(path);
 				return qpath;
