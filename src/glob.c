@@ -65,18 +65,15 @@ static bool match(char *pattern, const char *str) {
 	}
 }
 
-void glob(char *pattern, char ***out, size_t *outsz) {
+void glob(char *pattern, vec(char*) *out) {
 	char *mpattern, *dir, *dirend, *nextdir, *file, *path, *path2;
 	void *d;
-	char **arr;
-	size_t len;
+	vec(char*) vec;
 
 	mpattern = strchr(pattern, '*');
 	if (!mpattern) {
-		if (hostfexists(pattern)) {
-			*out = xrealloc(*out, sizeof(**out) * ++*outsz);
-			(*out)[*outsz - 1] = xstrdup(pattern);
-		}
+		if (hostfexists(pattern))
+			vec_push(*out, xstrdup(pattern));
 		return;
 	}
 
@@ -95,19 +92,17 @@ void glob(char *pattern, char ***out, size_t *outsz) {
 	if ((nextdir = strchr(mpattern, '/')))
 		*nextdir = 0;
 
-	arr = *out;
-	len = *outsz;
+	vec = *out;
 
 	while ((file = hostdread(d))) {
 		if (match(mpattern, file)) {
 			asprintf(&path, "%s/%s", dir, file);
 			if (!nextdir) {
-				arr = xrealloc(arr, sizeof(*arr) * ++len);
-				arr[len - 1] = path;
+				vec_push(vec, path);
 			} else {
 				if (hostisdir(path)) {
 					asprintf(&path2, "%s/%s", path, nextdir+1);
-					glob(path2, &arr, &len);
+					glob(path2, &vec);
 					free(path2);
 				}
 				free(path);
@@ -123,7 +118,6 @@ void glob(char *pattern, char ***out, size_t *outsz) {
 	if (nextdir)
 		*nextdir = '/';
 
-	qsort(arr+*outsz, len-*outsz, sizeof(*arr), qsortstr);
-	*out = arr;
-	*outsz = len;
+	qsort(vec+vec_size(out), vec_size(vec)-vec_size(out), sizeof(*vec), qsortstr);
+	*out = vec;
 }

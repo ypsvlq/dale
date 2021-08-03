@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include "vector.h"
 
 #define LEN(x) (sizeof(x) / sizeof(*x))
 
@@ -16,33 +17,25 @@ struct task {
 		DLL,
 	} type;
 	char *name;
-	char **srcs;
-	size_t nsrcs;
-	char **libs;
-	size_t nlibs;
-	char **incs;
-	size_t nincs;
-	char **defs;
-	size_t ndefs;
-	char **reqs;
-	size_t nreqs;
+	vec(char*) srcs;
+	vec(char*) libs;
+	vec(char*) incs;
+	vec(char*) defs;
+	vec(char*) reqs;
 	bool build, link;
 };
 
 struct tc {
 	char *lang;
 	char *name;
-	char **find;
-	size_t nfind;
+	vec(char*) find;
 	char *objext, *libext;
 	char *libpfx, *incpfx, *defpfx;
 	char *compile, *linkexe, *linklib, *linkdll;
 };
 
-extern struct task *tasks;
-extern size_t ntasks;
-extern struct tc *tcs;
-extern size_t ntcs;
+extern vec(struct task) tasks;
+extern vec(struct tc) tcs;
 
 extern const char *fname;
 extern size_t line;
@@ -57,7 +50,7 @@ char *xstrdup(const char *s);
 char *xstrndup(const char *s, size_t max);
 int asprintf(char **outp, const char *fmt, ...);
 
-void glob(char *pattern, char ***out, size_t *outsz);
+void glob(char *pattern, vec(char*) *out);
 
 void parsea(const char *arr[], size_t len);
 void parsef(const char *path, bool required);

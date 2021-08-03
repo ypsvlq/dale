@@ -9,13 +9,12 @@
 const char *fname;
 size_t line;
 
-static void loadarr(char ***out, size_t *outsz, char *val) {
+static void loadarr(vec(char*) *vec, char *val) {
 	char *p, *p2;
 	p2 = varexpand(val);
 	p = strtok(p2, " \t");
 	while (p) {
-		*out = xrealloc(*out, sizeof(**out) * ++*outsz);
-		(*out)[*outsz - 1] = xstrdup(p);
+		vec_push(*vec, xstrdup(p));
 		p = strtok(NULL, " \t");
 	}
 	free(p2);
@@ -39,8 +38,7 @@ static void parse(const char *(*read)(void *data), void *data) {
 	struct lists {
 		struct list {
 			char *name;
-			char ***out;
-			size_t *outsz;
+			vec(char*) *out;
 		} a[6];
 	} lists;
 
@@ -69,9 +67,8 @@ static void parse(const char *(*read)(void *data), void *data) {
 			} else if (sscanf(p, "%[^( ] ( %[^)]", s1, s2) == 2) {
 				if (!strcmp(s1, "toolchain")) {
 					state = TOOLCHAIN;
-					tcs = xrealloc(tcs, sizeof(*tcs) * ++ntcs);
-					tc = &tcs[ntcs-1];
-					*tc = (struct tc){0};
+					vec_push(tcs, (struct tc){0});
+					tc = &tcs[vec_size(tcs)-1];
 					tc->name = xstrdup(s2);
 					vars = (struct vars){{
 						{"lang", &tc->lang},
@@ -87,7 +84,7 @@ static void parse(const char *(*read)(void *data), void *data) {
 						{0}
 					}};
 					lists = (struct lists){{
-						{"find", &tc->find, &tc->nfind},
+						{"find", &tc->find},
 						{0}
 					}};
 					continue;
@@ -95,9 +92,8 @@ static void parse(const char *(*read)(void *data), void *data) {
 					if (strlen(s2) != strspn(s2, valid))
 						err("Invalid task name '%s'", s2);
 					state = TASK;
-					tasks = xrealloc(tasks, sizeof(*tasks) * ++ntasks);
-					task = &tasks[ntasks-1];
-					*task = (struct task){0};
+					vec_push(tasks, (struct task){0});
+					task = &tasks[vec_size(tasks)-1];
 					task->name = xstrdup(s2);
 					for (size_t i = 1; i < LEN(tasktypes); i++)
 						if (!strcmp(s1, tasktypes[i]))
@@ -105,11 +101,11 @@ static void parse(const char *(*read)(void *data), void *data) {
 					if (!task->type)
 						err("Invalid task type '%s'", s1);
 					lists = (struct lists){{
-						{"src", &task->srcs, &task->nsrcs},
-						{"lib", &task->libs, &task->nlibs},
-						{"inc", &task->incs, &task->nincs},
-						{"def", &task->defs, &task->ndefs},
-						{"req", &task->reqs, &task->nreqs},
+						{"src", &task->srcs},
+						{"lib", &task->libs},
+						{"inc", &task->incs},
+						{"def", &task->defs},
+						{"req", &task->reqs},
 						{0}
 					}};
 					continue;
@@ -120,7 +116,7 @@ static void parse(const char *(*read)(void *data), void *data) {
 				if (state == TASK || state == TOOLCHAIN) {
 					for (struct list *l = lists.a; l->name; l++) {
 						if (!strcmp(s1, l->name)) {
-							loadarr(l->out, l->outsz, s2);
+							loadarr(l->out, s2);
 							goto assigned;
 						}
 					}

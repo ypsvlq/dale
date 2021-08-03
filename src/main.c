@@ -7,18 +7,16 @@
 #include <errno.h>
 #include "dale.h"
 
-struct task *tasks;
-size_t ntasks;
-struct tc *tcs;
-size_t ntcs;
+vec(struct task) tasks;
+vec(struct tc) tcs;
 
-static void optparse(int argc, char *argv[], char ***pwant, size_t *pnwant);
+static vec(char*) optparse(int argc, char *argv[]);
 static struct tc *loadtc(void);
 
 static char *upperstr(const char *s);
-static void varpfxarr(const char *var, const char *pfx, char **arr, size_t len);
+static void varpfxarr(const char *var, const char *pfx, vec(char*) vec);
 static void taskvarset(const char *var, const char *name);
-static void globarr(char ***parr, size_t *psz);
+static void globarr(vec(char*) *pvec);
 
 int main(int argc, char *argv[]) {
 	char *p, *p2, *p3, *p4;
@@ -27,8 +25,7 @@ int main(int argc, char *argv[]) {
 	size_t sz;
 	char **arr, **msgs;
 	size_t taskn = 1;
-	char **want = NULL;
-	size_t nwant = 0;
+	vec(char*) want;
 	char *bscript, *bdir, *reqcflags, *reqlibs;
 	size_t jobs = 0;
 	uintmax_t um;
@@ -37,7 +34,7 @@ int main(int argc, char *argv[]) {
 
 	hostinit();
 
-	optparse(argc, argv, &want, &nwant);
+	want = optparse(argc, argv);
 
 	if (*varget("_nodefvar") != '1')
 		hostsetvars();
@@ -67,8 +64,8 @@ int main(int argc, char *argv[]) {
 	tc = loadtc();
 	printf("Using toolchain '%s'\n", tc->name);
 
-	for (size_t i = 0; i < nwant; i++) {
-		for (size_t j = 0; j < ntasks; j++) {
+	for (size_t i = 0; i < vec_size(want); i++) {
+		for (size_t j = 0; j < vec_size(tasks); j++) {
 			if (!strcmp(tasks[j].name, want[i])) {
 				tasks[j].build = true;
 				goto wantfound;
@@ -84,11 +81,11 @@ wantfound:;
 		varsetp("LEFLAGS", varexpand("$LFLAGS $LEFLAGS"));
 		varsetp("LDFLAGS", varexpand("$LFLAGS $LDFLAGS"));
 
-		for (size_t i = 0; i < ntasks; i++) {
-			if (nwant && !tasks[i].build)
+		for (size_t i = 0; i < vec_size(tasks); i++) {
+			if (want && !tasks[i].build)
 				continue;
 
-			printf("[%zu/%zu] %s\n", taskn++, nwant ? nwant : ntasks, tasks[i].name);
+			printf("[%zu/%zu] %s\n", taskn++, want ? vec_size(want) : vec_size(tasks), tasks[i].name);
 			varsetd("task", tasks[i].name);
 			varsetd("exe", tasks[i].type == EXE ? "1" : "0");
 			varsetd("lib", tasks[i].type == LIB ? "1" : "0");
@@ -98,12 +95,12 @@ wantfound:;
 			taskvarset("LEFLAGS", tasks[i].name);
 			taskvarset("LLFLAGS", tasks[i].name);
 			taskvarset("LDFLAGS", tasks[i].name);
-			globarr(&tasks[i].srcs, &tasks[i].nsrcs);
-			globarr(&tasks[i].incs, &tasks[i].nincs);
-			varpfxarr("CFLAGS", tc->incpfx, tasks[i].incs, tasks[i].nincs);
-			varpfxarr("CFLAGS", tc->defpfx, tasks[i].defs, tasks[i].ndefs);
+			globarr(&tasks[i].srcs);
+			globarr(&tasks[i].incs);
+			varpfxarr("CFLAGS", tc->incpfx, tasks[i].incs);
+			varpfxarr("CFLAGS", tc->defpfx, tasks[i].defs);
 
-			for (size_t j = 0; j < tasks[i].nreqs; j++) {
+			for (size_t j = 0; j < vec_size(tasks[i].reqs); j++) {
 				asprintf(&p, "HAVE_%s", tasks[i].reqs[j]);
 				if (!vargetnull(p)) {
 					free(p);
@@ -142,7 +139,7 @@ wantfound:;
 			skip = asprintf(&p, "%s/%s_obj", bdir, tasks[i].name);
 			hostmkdir(p);
 			free(p);
-			for (size_t j = 0; j < tasks[i].nsrcs; j++) {
+			for (size_t j = 0; j < vec_size(tasks[i].srcs); j++) {
 				asprintf(&p, "%s/%s_obj/%s", bdir, tasks[i].name, tasks[i].srcs[j]);
 				for (p2 = p + skip + 1; *p2; p2++) {
 					if (*p2 == '/') {
@@ -159,7 +156,7 @@ wantfound:;
 			sz = 0;
 
 			p2 = xstrdup("");
-			for (size_t j = 0; j < tasks[i].nsrcs; j++) {
+			for (size_t j = 0; j < vec_size(tasks[i].srcs); j++) {
 				asprintf(&p, "%s/%s_obj/%s%s", bdir, tasks[i].name, tasks[i].srcs[j], tc->objext);
 				asprintf(&p3, "%s %s", p2, p);
 				free(p2);
@@ -215,7 +212,7 @@ wantfound:;
 				varsetp("in", p2);
 				varsetp("out", p);
 				if (tasks[i].type != LIB)
-					varpfxarr("LIBS", tc->libpfx, tasks[i].libs, tasks[i].nlibs);
+					varpfxarr("LIBS", tc->libpfx, tasks[i].libs);
 				p = varexpand(p3);
 				if (verbose)
 					puts(p);
@@ -248,17 +245,14 @@ wantfound:;
 	hostquit();
 }
 
-static void optparse(int argc, char *argv[], char ***pwant, size_t *pnwant) {
+static vec(char*) optparse(int argc, char *argv[]) {
 	char *p, *p2;
 	size_t sz;
 
-	char **want = NULL;
-	size_t nwant = 0;
+	vec(char*) want = NULL;
 	int pflag = 0;
-	char **lflag = NULL;
-	size_t nlflag = 0;
-	char **gflag = NULL;
-	size_t ngflag = 0;
+	vec(char*) lflag = NULL;
+	vec(char*) gflag = NULL;
 	bool Gflag = false;
 
 	for (int i = 1; i < argc; i++) {
@@ -286,12 +280,10 @@ static void optparse(int argc, char *argv[], char ***pwant, size_t *pnwant) {
 						pflag = i+1;
 					break;
 				case 'l':
-					lflag = xrealloc(lflag, sizeof(*lflag) * ++nlflag);
-					lflag[nlflag-1] = argv[++i];
+					vec_push(lflag, argv[++i]);
 					break;
 				case 'g':
-					gflag = xrealloc(gflag, sizeof(*gflag) * ++ngflag);
-					gflag[ngflag-1] = argv[++i];
+					vec_push(gflag, argv[++i]);
 					break;
 				case 'G':
 					Gflag = true;
@@ -312,8 +304,7 @@ static void optparse(int argc, char *argv[], char ***pwant, size_t *pnwant) {
 				varset(p, p2);
 			}
 		} else {
-			want = xrealloc(want, sizeof(*want) * ++nwant);
-			want[nwant-1] = argv[i];
+			vec_push(want, argv[i]);
 		}
 	}
 
@@ -325,7 +316,7 @@ static void optparse(int argc, char *argv[], char ***pwant, size_t *pnwant) {
 				free(p);
 			}
 			if (gflag && !*(pdir+1)) {
-				for (size_t i = 0; i < ngflag; i++) {
+				for (size_t i = 0; i < vec_size(gflag); i++) {
 					asprintf(&p, "%s/%s.dale", *pdir, gflag[i]);
 					parsef(p, true);
 					free(p);
@@ -338,7 +329,7 @@ static void optparse(int argc, char *argv[], char ***pwant, size_t *pnwant) {
 	if (!lflag) {
 		parsef("local.dale", false);
 	} else {
-		for (size_t i = 0; i < nlflag; i++)
+		for (size_t i = 0; i < vec_size(lflag); i++)
 			parsef(lflag[i], true);
 		free(lflag);
 	}
@@ -357,8 +348,7 @@ static void optparse(int argc, char *argv[], char ***pwant, size_t *pnwant) {
 		}
 	}
 
-	*pwant = want;
-	*pnwant = nwant;
+	return want;
 }
 
 static struct tc *loadtc(void) {
@@ -372,7 +362,7 @@ static struct tc *loadtc(void) {
 
 	tcname = vargetnull("_tcname");
 
-	for (size_t i = 0; i < ntcs; i++) {
+	for (size_t i = 0; i < vec_size(tcs); i++) {
 		if (tcname && strcmp(tcs[i].name, tcname))
 			continue;
 		if (!tcs[i].find || !tcs[i].objext || !tcs[i].libext || !tcs[i].libpfx || !tcs[i].incpfx || !tcs[i].defpfx || !tcs[i].compile || !tcs[i].linkexe || !tcs[i].linklib || !tcs[i].linkdll) {
@@ -382,7 +372,7 @@ static struct tc *loadtc(void) {
 		if (strcmp(tcs[i].lang, lang))
 			continue;
 
-		for (size_t j = 0; j < tcs[i].nfind; j++) {
+		for (size_t j = 0; j < vec_size(tcs[i].find); j++) {
 			if ((p3 = strchr(tcs[i].find[j], '='))) {
 				p = xstrndup(tcs[i].find[j], p3 - tcs[i].find[j]);
 				puts(p);
@@ -399,7 +389,7 @@ static struct tc *loadtc(void) {
 			p = hostfind(p3 ? p3+1 : tcs[i].find[j]);
 			if (p) {
 				varset(p2, p);
-				if (j+1 == tcs[i].nfind)
+				if (j+1 == vec_size(tcs[i].find))
 					tc = &tcs[i];
 			} else {
 				free(p2);
@@ -422,7 +412,7 @@ static struct tc *loadtc(void) {
 			fputs("Error: No valid toolchain found (tried:", stderr);
 		else
 			fprintf(stderr, "Error: Unknown toolchain '%s' (known:", tcname);
-		for (size_t i = 0; i < ntcs; i++)
+		for (size_t i = 0; i < vec_size(tcs); i++)
 			if (!strcmp(tcs[i].lang, lang))
 				fprintf(stderr, " %s", tcs[i].name);
 		fputs(")\n", stderr);
@@ -440,13 +430,13 @@ static char *upperstr(const char *s) {
 	return out;
 }
 
-static void varpfxarr(const char *var, const char *pfx, char **arr, size_t len) {
+static void varpfxarr(const char *var, const char *pfx, vec(char*) vec) {
 	char *out, *tmp;
-	if (!len)
+	if (!vec_size(vec))
 		return;
-	asprintf(&out, "%s%s ", pfx, arr[0]);
-	for (size_t i = 1; i < len; i++) {
-		asprintf(&tmp, "%s%s%s ", out, pfx, arr[i]);
+	asprintf(&out, "%s%s ", pfx, vec[0]);
+	for (size_t i = 1; i < vec_size(vec); i++) {
+		asprintf(&tmp, "%s%s%s ", out, pfx, vec[i]);
 		free(out);
 		out = tmp;
 	}
@@ -461,14 +451,12 @@ static void taskvarset(const char *var, const char *name) {
 	free(p);
 }
 
-static void globarr(char ***parr, size_t *psz) {
-	char **arr = *parr;
-	size_t sz = *psz;
-	*parr = NULL;
-	*psz = 0;
-	for (size_t j = 0; j < sz; j++) {
-		glob(arr[j], parr, psz);
-		free(arr[j]);
+static void globarr(vec(char*) *pvec) {
+	vec(char*) vec = *pvec;
+	*pvec = NULL;
+	for (size_t j = 0; j < vec_size(vec); j++) {
+		glob(vec[j], pvec);
+		free(vec[j]);
 	}
-	free(arr);
+	vec_free(vec);
 }
