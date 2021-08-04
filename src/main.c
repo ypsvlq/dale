@@ -322,7 +322,7 @@ static vec(char*) optparse(int argc, char *argv[]) {
 				}
 			}
 		}
-		free(gflag);
+		vec_free(gflag);
 	}
 
 	if (!lflag) {
@@ -330,7 +330,7 @@ static vec(char*) optparse(int argc, char *argv[]) {
 	} else {
 		for (size_t i = 0; i < vec_size(lflag); i++)
 			parsef(lflag[i], true);
-		free(lflag);
+		vec_free(lflag);
 	}
 
 	if (pflag) {
