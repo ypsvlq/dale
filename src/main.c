@@ -75,8 +75,6 @@ wantfound:;
 
 	if (tasks) {
 		hostmkdir(bdir);
-		varsetp("LEFLAGS", varexpand("$LFLAGS $LEFLAGS"));
-		varsetp("LDFLAGS", varexpand("$LFLAGS $LDFLAGS"));
 
 		for (struct task *task = tasks; task < vec_end(tasks); task++) {
 			if (want && !task->build)
