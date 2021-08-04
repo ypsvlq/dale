@@ -33,12 +33,12 @@ int main(int argc, char *argv[]) {
 	char *exeext, *dllext;
 
 	hostinit();
-
 	want = optparse(argc, argv);
-
 	if (*varget("_nodefvar") != '1')
 		hostsetvars();
 
+	exeext = varget("_exeext");
+	dllext = varget("_dllext");
 	bscript = vargetnull("_bscript");
 	if (!bscript)
 		bscript = "build.dale";
@@ -49,8 +49,6 @@ int main(int argc, char *argv[]) {
 	reqcflags = vargetnull("_reqcflags");
 	reqlibs = vargetnull("_reqlibs");
 	p = vargetnull("_jobs");
-	exeext = varget("_exeext");
-	dllext = varget("_dllext");
 	if (p) {
 		errno = 0;
 		um = strtoumax(p, NULL, 10);
@@ -341,7 +339,7 @@ static vec(char*) optparse(int argc, char *argv[]) {
 			} else if (strchr(argv[i], '=')) {
 				sz = strcspn(argv[i], "=");
 				p = xstrndup(argv[i], sz);
-				p2 = xstrdup(argv[i] +  sz + 1);
+				p2 = xstrdup(argv[i] + sz + 1);
 				varset(p, p2);
 			}
 		}
