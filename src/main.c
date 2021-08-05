@@ -241,9 +241,7 @@ wantfound:;
 }
 
 static vec(char*) optparse(int argc, char *argv[]) {
-	char *p, *p2;
-	size_t sz;
-
+	char *p;
 	vec(char*) want = NULL;
 	int pflag = 0;
 	vec(char*) lflag = NULL;
@@ -288,15 +286,14 @@ static vec(char*) optparse(int argc, char *argv[]) {
 			}
 		} else if ((p = strstr(argv[i], "+="))) {
 			if (!pflag) {
-				p2 = xstrndup(argv[i], p - argv[i]);
-				varappend(p2, p+2);
+				*p = 0;
+				varappend(argv[i], p+2);
 			}
 		} else if (strchr(argv[i], '=')) {
 			if (!pflag) {
-				sz = strcspn(argv[i], "=");
-				p = xstrndup(argv[i], sz);
-				p2 = xstrdup(argv[i] + sz + 1);
-				varset(p, p2);
+				p = strchr(argv[i], '=');
+				*p = 0;
+				varsetc(argv[i], p+1);
 			}
 		} else {
 			vec_push(want, argv[i]);
@@ -332,13 +329,12 @@ static vec(char*) optparse(int argc, char *argv[]) {
 	if (pflag) {
 		for (int i = pflag; i < argc; i++) {
 			if ((p = strstr(argv[i], "+="))) {
-				p2 = xstrndup(argv[i], p - argv[i]);
-				varappend(p2, p+2);
+				*p = 0;
+				varappend(argv[i], p+2);
 			} else if (strchr(argv[i], '=')) {
-				sz = strcspn(argv[i], "=");
-				p = xstrndup(argv[i], sz);
-				p2 = xstrdup(argv[i] + sz + 1);
-				varset(p, p2);
+				p = strchr(argv[i], '=');
+				*p = 0;
+				varsetc(argv[i], p+1);
 			}
 		}
 	}
