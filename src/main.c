@@ -81,10 +81,10 @@ wantfound:;
 				continue;
 
 			printf("[%zu/%zu] %s\n", taskn++, want ? vec_size(want) : vec_size(tasks), task->name);
-			varsetd("task", task->name);
-			varsetd("exe", task->type == EXE ? "1" : "0");
-			varsetd("lib", task->type == LIB ? "1" : "0");
-			varsetd("dll", task->type == DLL ? "1" : "0");
+			varsetc("task", task->name);
+			varsetc("exe", task->type == EXE ? "1" : "0");
+			varsetc("lib", task->type == LIB ? "1" : "0");
+			varsetc("dll", task->type == DLL ? "1" : "0");
 			taskvarset("CFLAGS", task->name);
 			taskvarset("LIBS", task->name);
 			taskvarset("LEFLAGS", task->name);
@@ -105,7 +105,7 @@ wantfound:;
 						free(p2);
 						if (!p)
 							p = *req;
-						varsetd("name", p);
+						varsetc("name", p);
 						p = varexpand(reqcflags);
 						p2 = hostexecout(p);
 						free(p);
@@ -158,7 +158,7 @@ wantfound:;
 				p2 = p3;
 				if (hostfnewer(*src, p)) {
 					task->link = true;
-					varsetd("in", *src);
+					varsetc("in", *src);
 					varsetp("out", p);
 					sz++;
 					arr = xrealloc(arr, sizeof(*arr) * sz);

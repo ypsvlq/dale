@@ -57,7 +57,7 @@ void parsef(const char *path, bool required);
 
 void varset(char *name, char *val);
 void varsetp(const char *name, char *val);
-void varsetd(const char *name, const char *val);
+void varsetc(const char *name, const char *val);
 void varappend(const char *name, const char *val);
 void varunset(const char *name);
 char *varget(const char *name);

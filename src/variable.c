@@ -8,6 +8,7 @@
 static struct var {
 	struct var *next;
 	char *name, *val;
+	bool freename, freeval;
 } *tbl[BUCKETS];
 
 const char valid[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-";
@@ -28,7 +29,7 @@ static uint32_t getidx(const char *name) {
 	return hash(name) % BUCKETS;
 }
 
-void varset(char *name, char *val) {
+static void varset_(char *name, char *val, bool freename, bool freeval) {
 	uint32_t idx;
 	struct var *var;
 	idx = getidx(name);
@@ -36,15 +37,21 @@ void varset(char *name, char *val) {
 	var->next = tbl[idx];
 	var->name = name;
 	var->val = val;
+	var->freename = freename;
+	var->freeval = freeval;
 	tbl[idx] = var;
 }
 
-void varsetp(const char *name, char *val) {
-	varset(xstrdup(name), val);
+void varset(char *name, char *val) {
+	varset_(name, val, true, true);
 }
 
-void varsetd(const char *name, const char *val) {
-	varsetp(name, xstrdup(val));
+void varsetp(const char *name, char *val) {
+	varset_((char*)name, val, false, true);
+}
+
+void varsetc(const char *name, const char *val) {
+	varset_((char*)name, (char*)val, false, false);
 }
 
 void varappend(const char *name, const char *val) {
@@ -58,7 +65,7 @@ void varappend(const char *name, const char *val) {
 			return;
 		}
 	}
-	varsetd(name, val);
+	varset(xstrdup(name), xstrdup(val));
 }
 
 void varunset(const char *name) {
@@ -78,8 +85,10 @@ void varunset(const char *name) {
 		}
 	}
 	if (tmp) {
-		free(tmp->name);
-		free(tmp->val);
+		if (tmp->freename)
+			free(tmp->name);
+		if (tmp->freeval)
+			free(tmp->val);
 		free(tmp);
 	}
 }
