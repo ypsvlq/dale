@@ -60,7 +60,8 @@ void varappend(const char *name, const char *val) {
 	for (struct var *var = tbl[idx]; var; var = var->next) {
 		if (!strcmp(var->name, name)) {
 			asprintf(&p, "%s %s", var->val, val);
-			free(var->val);
+			if (var->freeval)
+				free(var->val);
 			var->val = p;
 			return;
 		}
