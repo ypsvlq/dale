@@ -5,6 +5,7 @@
 
 static char *find(vec(char*));
 static char *map(vec(char*));
+static char *stripext(vec(char*));
 
 static const struct builtin {
 	char *name;
@@ -13,6 +14,7 @@ static const struct builtin {
 } builtins[] = {
 	{"find", find, 1},
 	{"map", map, 2},
+	{"stripext", stripext, 1},
 };
 
 static size_t bscan(const char *str, char ob, char cb) {
@@ -220,4 +222,9 @@ static char *map(vec(char*) args) {
 	if (out)
 		out[len] = '\0';
 	return out;
+}
+
+static char *stripext(vec(char*) args) {
+	char *p = strrchr(args[0], '.');
+	return xstrndup(args[0], p - args[0]);
 }
