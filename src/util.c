@@ -61,3 +61,20 @@ int asprintf(char **outp, const char *fmt, ...) {
 	va_end(ap);
 	return n;
 }
+
+char *strsep(char **sp, const char *delim) {
+	char *s, *end;
+
+	s = *sp;
+	if (!s)
+		return NULL;
+
+	end = s + strcspn(s, delim);
+	if (*end)
+		*end++ = 0;
+	else
+		end = 0;
+
+	*sp = end;
+	return s;
+}

@@ -47,7 +47,7 @@ char *varexpand(const char *str) {
 	char *bstack = NULL;
 	size_t nbstack = 0;
 
-	char *out, *p, *p2, *p3;
+	char *out, *p, *p2, *p3, *ctx;
 	size_t len, sz;
 	bool negate;
 	vec(char*) args;
@@ -137,12 +137,13 @@ char *varexpand(const char *str) {
 					for (size_t i = 0; i < LEN(builtins); i++) {
 						if (!strcmp(builtins[i].name, p3)) {
 							args = NULL;
-							p2 = strtok(p, " \t");
+							ctx = p;
+							p2 = strsep(&ctx, " \t");
 							for (size_t j = 0; j < builtins[i].minargs; j++) {
 								if (!p2)
 									err("Builtin '%s' takes %zu args but got %zu", builtins[i].name, builtins[i].minargs, j);
 								vec_push(args, p2);
-								p2 = strtok(NULL, " \t");
+								p2 = strsep(&ctx, " \t");
 							}
 							if (p2) {
 								if (p+sz-1 > p2+strlen(p2))
@@ -197,15 +198,15 @@ static char *find(vec(char*) args) {
 static char *map(vec(char*) args) {
 	char *out = NULL;
 	size_t len = 0;
-	char *arr, *cur, *p;
+	char *arr, *cur, *p, *ctx;
 	size_t n;
 
 	if (vec_size(args) < 3)
 		err("Nothing to map");
 
 	arr = xstrdup(varget(args[0]));
-	cur = strtok(arr, " \t");
-	while (cur) {
+	ctx = arr;
+	while ((cur = strsep(&ctx, " \t"))) {
 		varsetc(args[1], cur);
 		p = varexpand(args[2]);
 		n = strlen(p);
@@ -215,7 +216,6 @@ static char *map(vec(char*) args) {
 		out[len++] = ' ';
 		free(p);
 		varunset(args[1]);
-		cur = strtok(NULL, " \t");
 	}
 
 	free(arr);
