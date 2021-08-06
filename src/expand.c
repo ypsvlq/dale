@@ -6,6 +6,15 @@
 static char *find(vec(char*));
 static char *map(vec(char*));
 
+static const struct builtin {
+	char *name;
+	char *(*fn)(vec(char*) args);
+	size_t minargs;
+} builtins[] = {
+	{"find", find, 1},
+	{"map", map, 2},
+};
+
 static size_t bscan(const char *str, char ob, char cb) {
 	char search[] = {cb, '$', '\0'};
 	size_t sz = 0;
@@ -30,15 +39,6 @@ static size_t bscan(const char *str, char ob, char cb) {
 }
 
 char *varexpand(const char *str) {
-	static const struct builtin {
-		char *name;
-		char *(*fn)(vec(char*) args);
-		size_t minargs;
-	} builtins[] = {
-		{"find", find, 1},
-		{"map", map, 2},
-	};
-
 	enum {NONE, NORMAL, COND, BUILTIN} type;
 	static const char brackets[] = {0, '(', '[', '{'};
 	static const char cbrackets[] = {0, ')', ']', '}'};
