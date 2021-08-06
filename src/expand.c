@@ -3,6 +3,9 @@
 #include <stdbool.h>
 #include "dale.h"
 
+static char *find(vec(char*));
+static char *map(vec(char*));
+
 static size_t bscan(const char *str, char ob, char cb) {
 	char search[] = {cb, '$', '\0'};
 	size_t sz = 0;
@@ -29,9 +32,11 @@ static size_t bscan(const char *str, char ob, char cb) {
 char *varexpand(const char *str) {
 	static const struct builtin {
 		char *name;
-		char *(*fn)(const char *str);
+		char *(*fn)(vec(char*) args);
+		size_t minargs;
 	} builtins[] = {
-		{"find", hostfind},
+		{"find", find, 1},
+		{"map", map, 2},
 	};
 
 	enum {NONE, NORMAL, COND, BUILTIN} type;
@@ -43,6 +48,7 @@ char *varexpand(const char *str) {
 	char *out, *p, *p2, *p3;
 	size_t len, sz;
 	bool negate;
+	vec(char*) args;
 
 	out = NULL;
 	len = 0;
@@ -128,7 +134,21 @@ char *varexpand(const char *str) {
 				} else if (type == BUILTIN) {
 					for (size_t i = 0; i < LEN(builtins); i++) {
 						if (!strcmp(builtins[i].name, p3)) {
-							p2 = builtins[i].fn(p);
+							args = NULL;
+							p2 = strtok(p, " \t");
+							for (size_t j = 0; j < builtins[i].minargs; j++) {
+								if (!p2)
+									err("Builtin '%s' takes %zu args but got %zu", builtins[i].name, builtins[i].minargs, j);
+								vec_push(args, p2);
+								p2 = strtok(NULL, " \t");
+							}
+							if (p2) {
+								if (p+sz-1 > p2+strlen(p2))
+									p2[strlen(p2)] = ' ';
+								vec_push(args, p2);
+							}
+							p2 = builtins[i].fn(args);
+							vec_free(args);
 							if (p2) {
 								sz = strlen(p2);
 								out = xrealloc(out, len+sz);
@@ -161,6 +181,40 @@ char *varexpand(const char *str) {
 	if (!out)
 		out = xstrdup("");
 	else
+		out[len] = '\0';
+	return out;
+}
+
+static char *find(vec(char*) args) {
+	return hostfind(args[0]);
+}
+
+static char *map(vec(char*) args) {
+	char *out = NULL;
+	size_t len = 0;
+	char *arr, *cur, *p;
+	size_t n;
+
+	if (vec_size(args) < 3)
+		err("Nothing to map");
+
+	arr = xstrdup(varget(args[0]));
+	cur = strtok(arr, " \t");
+	while (cur) {
+		varsetc(args[1], cur);
+		p = varexpand(args[2]);
+		n = strlen(p);
+		out = xrealloc(out, len+n+2);
+		memcpy(out+len, p, n);
+		len += n;
+		out[len++] = ' ';
+		free(p);
+		varunset(args[1]);
+		cur = strtok(NULL, " \t");
+	}
+
+	free(arr);
+	if (out)
 		out[len] = '\0';
 	return out;
 }
