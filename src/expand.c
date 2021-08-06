@@ -225,6 +225,9 @@ static char *map(vec(char*) args) {
 }
 
 static char *stripext(vec(char*) args) {
-	char *p = strrchr(args[0], '.');
-	return xstrndup(args[0], p - args[0]);
+	char *s, *out;
+	s = varexpand(args[0]);
+	out = xstrndup(s, strrchr(s, '.') - s);
+	free(s);
+	return out;
 }
