@@ -156,8 +156,11 @@ char *varexpand(const char *str) {
 								len += sz;
 								free(p2);
 							}
+							goto builtinfound;
 						}
 					}
+					err("Unknown builtin '%s'", p3);
+builtinfound:
 					free(p3);
 				}
 				free(p);
