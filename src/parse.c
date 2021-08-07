@@ -39,10 +39,11 @@ static void parse(const char *(*read)(void *data), void *data) {
 	char *p2, *cur, *ctx;
 	size_t n;
 	char **args;
-	enum {NONE, TASK, TOOLCHAIN, BUILD} state;
+	enum {NONE, TASK, TOOLCHAIN, BUILD, RULE} state;
 	struct task *task;
 	struct tc *tc;
 	struct build *build;
+	struct rule *rule;
 	struct vars {
 		struct var {
 			char *name;
@@ -138,6 +139,20 @@ static void parse(const char *(*read)(void *data), void *data) {
 					vec_push(builds, (struct build){.name = xstrdup(s2)});
 					build = &builds[vec_size(builds)-1];
 					continue;
+				} else if (!strcmp(s1, "rule")) {
+					state = RULE;
+					p = strchr(s2, '.');
+					if (!p)
+						err("Invalid rule name '%s'", s2);
+					n = p - s2;
+					for (struct build *build = builds; build < vec_end(builds); build++) {
+						if (!strncmp(build->name, s2, n) && strlen(build->name) == n) {
+							vec_push(build->rules, (struct rule){.name = xstrdup(p+1)});
+							rule = vec_end(build->rules) - 1;
+							goto assigned;
+						}
+					}
+					err("Unknown build '%s'", xstrndup(s2, n));
 				} else {
 					if (strlen(s2) != strspn(s2, valid))
 						err("Invalid task name '%s'", s2);
@@ -164,6 +179,9 @@ static void parse(const char *(*read)(void *data), void *data) {
 		} else {
 			if (state == BUILD) {
 				vec_push(build->steps, xstrdup(p));
+				continue;
+			} else if (state == RULE) {
+				vec_push(rule->cmds, xstrdup(p));
 				continue;
 			} else if (state != NONE && sscanf(p, "%[^: ] : %[^\n]", s1, s2) == 2) {
 				if (state == TASK || state == TOOLCHAIN) {

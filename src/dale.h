@@ -34,9 +34,15 @@ struct tc {
 	char *compile, *linkexe, *linklib, *linkdll;
 };
 
+struct rule {
+	char *name;
+	vec(char*) cmds;
+};
+
 struct build {
 	char *name;
 	vec(char*) steps;
+	vec(struct rule) rules;
 };
 
 extern vec(struct task) tasks;
