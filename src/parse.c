@@ -2,12 +2,23 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <ctype.h>
 #include "dale.h"
 
 #define LINE_MAX 2048
 
 const char *fname;
 size_t line;
+
+static void dump(char**);
+
+static const struct {
+	char *name;
+	void (*fn)(vec(char*));
+	size_t nargs;
+} builtins[] = {
+	{"dump", dump, 1},
+};
 
 static void loadarr(vec(char*) *vec, char *val) {
 	char *p, *p2;
@@ -25,7 +36,9 @@ static void parse(const char *(*read)(void *data), void *data) {
 	static const char *decltypes[] = {0, "task", "toolchain"};
 	static char s1[LINE_MAX], s2[LINE_MAX];
 	const char *buf, *p;
-	char *p2;
+	char *p2, *cur, *ctx;
+	size_t n;
+	char **args;
 	enum {NONE, TASK, TOOLCHAIN, BUILD} state;
 	struct task *task;
 	struct tc *tc;
@@ -50,7 +63,38 @@ static void parse(const char *(*read)(void *data), void *data) {
 		if (*p == '\n' || *p == '#')
 			continue;
 		if (buf == p) {
-			if (sscanf(p, "%[^= ] = %[^\n]", s1, s2) == 2) {
+			if (*p == '@') {
+				p++;
+				for (size_t i = 0; i < LEN(builtins); i++) {
+					n = strlen(builtins[i].name);
+					if (!strncmp(builtins[i].name, p, n) && isspace(p[n])) {
+						p += n+1;
+						args = xmalloc(sizeof(*args) * builtins[i].nargs);
+						p2 = xstrdup(p);
+						cur = strpbrk(p2, "\r\n");
+						if (cur)
+							*cur = '\0';
+						ctx = p2;
+						n = 0;
+						if (*p2) {
+							while ((cur = strsep(&ctx, " \t"))) {
+								args[n++] = cur;
+								if (n == builtins[i].nargs)
+									break;
+							}
+							while (strsep(&ctx, " \t"))
+								n++;
+						}
+						if (n != builtins[i].nargs)
+							err("Builtin '%s' takes %zu arguments but got %zu", builtins[i].name, builtins[i].nargs, n);
+						builtins[i].fn(args);
+						free(p2);
+						free(args);
+						goto assigned;
+					}
+				}
+				err("Unknown builtin '%s'", xstrndup(p, strcspn(p, " \t")));
+			} else if (sscanf(p, "%[^= ] = %[^\n]", s1, s2) == 2) {
 				state = NONE;
 				varset(xstrdup(s1), varexpand(s2));
 				continue;
@@ -195,4 +239,8 @@ void parsef(const char *path, bool required) {
 		err("Failed reading '%s'", fname);
 	fclose(f);
 	free(path2);
+}
+
+static void dump(char **args) {
+	printf("%s = %s\n", args[0], varget(args[0]));
 }
