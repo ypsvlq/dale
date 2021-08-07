@@ -26,9 +26,10 @@ static void parse(const char *(*read)(void *data), void *data) {
 	static char s1[LINE_MAX], s2[LINE_MAX];
 	const char *buf, *p;
 	char *p2;
-	enum {NONE, TASK, TOOLCHAIN} state;
+	enum {NONE, TASK, TOOLCHAIN, BUILD} state;
 	struct task *task;
 	struct tc *tc;
+	struct build *build;
 	struct vars {
 		struct var {
 			char *name;
@@ -88,6 +89,11 @@ static void parse(const char *(*read)(void *data), void *data) {
 						{0}
 					}};
 					continue;
+				} else if (!strcmp(s1, "build")) {
+					state = BUILD;
+					vec_push(builds, (struct build){.name = xstrdup(s2)});
+					build = &builds[vec_size(builds)-1];
+					continue;
 				} else {
 					if (strlen(s2) != strspn(s2, valid))
 						err("Invalid task name '%s'", s2);
@@ -112,7 +118,10 @@ static void parse(const char *(*read)(void *data), void *data) {
 				}
 			}
 		} else {
-			if (state != NONE && sscanf(p, "%[^: ] : %[^\n]", s1, s2) == 2) {
+			if (state == BUILD) {
+				vec_push(build->steps, xstrdup(p));
+				continue;
+			} else if (state != NONE && sscanf(p, "%[^: ] : %[^\n]", s1, s2) == 2) {
 				if (state == TASK || state == TOOLCHAIN) {
 					for (struct list *l = lists.a; l->name; l++) {
 						if (!strcmp(s1, l->name)) {

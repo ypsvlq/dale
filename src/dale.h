@@ -34,8 +34,14 @@ struct tc {
 	char *compile, *linkexe, *linklib, *linkdll;
 };
 
+struct build {
+	char *name;
+	vec(char*) steps;
+};
+
 extern vec(struct task) tasks;
 extern vec(struct tc) tcs;
+extern vec(struct build) builds;
 
 extern const char *fname;
 extern size_t line;

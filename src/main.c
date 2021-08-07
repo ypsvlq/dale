@@ -9,6 +9,7 @@
 
 vec(struct task) tasks;
 vec(struct tc) tcs;
+vec(struct build) builds;
 
 static vec(char*) optparse(int argc, char *argv[]);
 static struct tc *loadtc(void);
