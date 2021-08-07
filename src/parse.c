@@ -10,16 +10,6 @@
 const char *fname;
 size_t line;
 
-static void dump(char**);
-
-static const struct {
-	char *name;
-	void (*fn)(vec(char*));
-	size_t nargs;
-} builtins[] = {
-	{"dump", dump, 1},
-};
-
 static void loadarr(vec(char*) *vec, char *val) {
 	char *p, *p2;
 	p2 = varexpand(val);
@@ -66,11 +56,11 @@ static void parse(const char *(*read)(void *data), void *data) {
 		if (buf == p) {
 			if (*p == '@') {
 				p++;
-				for (size_t i = 0; i < LEN(builtins); i++) {
-					n = strlen(builtins[i].name);
-					if (!strncmp(builtins[i].name, p, n) && isspace(p[n])) {
+				for (size_t i = 0; pbuiltins[i].name; i++) {
+					n = strlen(pbuiltins[i].name);
+					if (!strncmp(pbuiltins[i].name, p, n) && isspace(p[n])) {
 						p += n+1;
-						args = xmalloc(sizeof(*args) * builtins[i].nargs);
+						args = xmalloc(sizeof(*args) * pbuiltins[i].nargs);
 						p2 = xstrdup(p);
 						cur = strpbrk(p2, "\r\n");
 						if (cur)
@@ -80,15 +70,15 @@ static void parse(const char *(*read)(void *data), void *data) {
 						if (*p2) {
 							while ((cur = rstrtok(&ctx, " \t"))) {
 								args[n++] = cur;
-								if (n == builtins[i].nargs)
+								if (n == pbuiltins[i].nargs)
 									break;
 							}
 							while (rstrtok(&ctx, " \t"))
 								n++;
 						}
-						if (n != builtins[i].nargs)
-							err("Builtin '%s' takes %zu arguments but got %zu", builtins[i].name, builtins[i].nargs, n);
-						builtins[i].fn(args);
+						if (n != pbuiltins[i].nargs)
+							err("Builtin '%s' takes %zu arguments but got %zu", pbuiltins[i].name, pbuiltins[i].nargs, n);
+						pbuiltins[i].fn(args);
 						free(p2);
 						free(args);
 						goto assigned;
@@ -257,8 +247,4 @@ void parsef(const char *path, bool required) {
 		err("Failed reading '%s'", fname);
 	fclose(f);
 	free(path2);
-}
-
-static void dump(char **args) {
-	printf("%s = %s\n", args[0], varget(args[0]));
 }

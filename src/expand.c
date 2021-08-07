@@ -3,20 +3,6 @@
 #include <stdbool.h>
 #include "dale.h"
 
-static char *find(vec(char*));
-static char *map(vec(char*));
-static char *stripext(vec(char*));
-
-static const struct builtin {
-	char *name;
-	char *(*fn)(vec(char*) args);
-	size_t minargs;
-} builtins[] = {
-	{"find", find, 1},
-	{"map", map, 2},
-	{"stripext", stripext, 1},
-};
-
 static size_t bscan(const char *str, char ob, char cb) {
 	char search[] = {cb, '$', '\0'};
 	size_t sz = 0;
@@ -134,14 +120,14 @@ char *varexpand(const char *str) {
 						free(p2);
 					}
 				} else if (type == BUILTIN) {
-					for (size_t i = 0; i < LEN(builtins); i++) {
-						if (!strcmp(builtins[i].name, p3)) {
+					for (size_t i = 0; ebuiltins[i].name; i++) {
+						if (!strcmp(ebuiltins[i].name, p3)) {
 							args = NULL;
 							ctx = p;
 							p2 = rstrtok(&ctx, " \t");
-							for (size_t j = 0; j < builtins[i].minargs; j++) {
+							for (size_t j = 0; j < ebuiltins[i].minargs; j++) {
 								if (!p2)
-									err("Builtin '%s' takes %zu args but got %zu", builtins[i].name, builtins[i].minargs, j);
+									err("Builtin '%s' takes %zu args but got %zu", ebuiltins[i].name, ebuiltins[i].minargs, j);
 								vec_push(args, p2);
 								p2 = rstrtok(&ctx, " \t");
 							}
@@ -150,7 +136,7 @@ char *varexpand(const char *str) {
 									p2[strlen(p2)] = ' ';
 								vec_push(args, p2);
 							}
-							p2 = builtins[i].fn(args);
+							p2 = ebuiltins[i].fn(args);
 							vec_free(args);
 							if (p2) {
 								sz = strlen(p2);
@@ -188,46 +174,5 @@ builtinfound:
 		out = xstrdup("");
 	else
 		out[len] = '\0';
-	return out;
-}
-
-static char *find(vec(char*) args) {
-	return hostfind(args[0]);
-}
-
-static char *map(vec(char*) args) {
-	char *out = NULL;
-	size_t len = 0;
-	char *arr, *cur, *p, *ctx;
-	size_t n;
-
-	if (vec_size(args) < 3)
-		err("Nothing to map");
-
-	arr = xstrdup(varget(args[0]));
-	ctx = arr;
-	while ((cur = rstrtok(&ctx, " \t"))) {
-		varsetc(args[1], cur);
-		p = varexpand(args[2]);
-		n = strlen(p);
-		out = xrealloc(out, len+n+2);
-		memcpy(out+len, p, n);
-		len += n;
-		out[len++] = ' ';
-		free(p);
-		varunset(args[1]);
-	}
-
-	free(arr);
-	if (out)
-		out[len] = '\0';
-	return out;
-}
-
-static char *stripext(vec(char*) args) {
-	char *s, *out;
-	s = varexpand(args[0]);
-	out = xstrndup(s, strrchr(s, '.') - s);
-	free(s);
 	return out;
 }

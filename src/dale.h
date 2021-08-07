@@ -45,6 +45,18 @@ struct build {
 	vec(struct rule) rules;
 };
 
+struct ebuiltin {
+	char *name;
+	char *(*fn)(vec(char*));
+	size_t minargs;
+};
+
+struct pbuiltin {
+	char *name;
+	void (*fn)(char **);
+	size_t nargs;
+};
+
 extern vec(struct task) tasks;
 extern vec(struct tc) tcs;
 extern vec(struct build) builds;
@@ -53,6 +65,9 @@ extern const char *fname;
 extern size_t line;
 
 extern const char valid[];
+
+extern const struct ebuiltin ebuiltins[];
+extern const struct pbuiltin pbuiltins[];
 
 noreturn void err(const char *fmt, ...);
 
