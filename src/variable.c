@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "dale.h"
 
 #define BUCKETS 1000
@@ -34,6 +35,9 @@ static void varset_(char *name, char *val, bool freename, bool freeval) {
 	struct var *var;
 	idx = getidx(name);
 	var = xmalloc(sizeof(*var));
+	if (freeval)
+		for (char *p = &val[strlen(val)-1]; p > val && isspace(*p); p--)
+			*p = '\0';
 	var->next = tbl[idx];
 	var->name = name;
 	var->val = val;
