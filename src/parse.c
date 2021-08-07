@@ -78,12 +78,12 @@ static void parse(const char *(*read)(void *data), void *data) {
 						ctx = p2;
 						n = 0;
 						if (*p2) {
-							while ((cur = strsep(&ctx, " \t"))) {
+							while ((cur = rstrtok(&ctx, " \t"))) {
 								args[n++] = cur;
 								if (n == builtins[i].nargs)
 									break;
 							}
-							while (strsep(&ctx, " \t"))
+							while (rstrtok(&ctx, " \t"))
 								n++;
 						}
 						if (n != builtins[i].nargs)

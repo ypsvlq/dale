@@ -61,7 +61,7 @@ void *xrealloc(void *p, size_t n);
 char *xstrdup(const char *s);
 char *xstrndup(const char *s, size_t max);
 int asprintf(char **outp, const char *fmt, ...);
-char *strsep(char **sp, const char *delim);
+char *rstrtok(char **sp, const char *delim);
 
 void glob(char *pattern, vec(char*) *out);
 

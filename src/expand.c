@@ -138,12 +138,12 @@ char *varexpand(const char *str) {
 						if (!strcmp(builtins[i].name, p3)) {
 							args = NULL;
 							ctx = p;
-							p2 = strsep(&ctx, " \t");
+							p2 = rstrtok(&ctx, " \t");
 							for (size_t j = 0; j < builtins[i].minargs; j++) {
 								if (!p2)
 									err("Builtin '%s' takes %zu args but got %zu", builtins[i].name, builtins[i].minargs, j);
 								vec_push(args, p2);
-								p2 = strsep(&ctx, " \t");
+								p2 = rstrtok(&ctx, " \t");
 							}
 							if (p2) {
 								if (p+sz-1 > p2+strlen(p2))
@@ -206,7 +206,7 @@ static char *map(vec(char*) args) {
 
 	arr = xstrdup(varget(args[0]));
 	ctx = arr;
-	while ((cur = strsep(&ctx, " \t"))) {
+	while ((cur = rstrtok(&ctx, " \t"))) {
 		varsetc(args[1], cur);
 		p = varexpand(args[2]);
 		n = strlen(p);

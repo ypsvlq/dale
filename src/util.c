@@ -62,13 +62,18 @@ int asprintf(char **outp, const char *fmt, ...) {
 	return n;
 }
 
-char *strsep(char **sp, const char *delim) {
+char *rstrtok(char **sp, const char *delim) {
 	char *s, *end;
 
 	s = *sp;
 	if (!s)
 		return NULL;
 
+	s += strspn(s, delim);
+	if (!*s) {
+		*sp = 0;
+		return NULL;
+	}
 	end = s + strcspn(s, delim);
 	if (*end)
 		*end++ = 0;
