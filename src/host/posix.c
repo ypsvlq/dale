@@ -102,7 +102,10 @@ bool hostfnewer(const char *path1, const char *path2) {
 			return true;
 		err("stat '%s': %s", path2, strerror(errno));
 	}
-	return sb1.st_mtim.tv_sec >= sb2.st_mtim.tv_sec;
+	if (sb1.st_mtim.tv_sec != sb2.st_mtim.tv_sec)
+		return sb1.st_mtim.tv_sec >= sb2.st_mtim.tv_sec;
+	else
+		return sb1.st_mtim.tv_nsec >= sb2.st_mtim.tv_nsec;
 }
 
 bool hostfexists(const char *path) {
