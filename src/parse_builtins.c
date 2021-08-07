@@ -5,10 +5,12 @@
 
 static void dump(char **);
 static void do_(char **);
+static void mkdirs(char **);
 
 const struct pbuiltin pbuiltins[] = {
 	{"dump", dump, 1},
 	{"do", do_, 3},
+	{"mkdirs", mkdirs, 1},
 	{0}
 };
 
@@ -94,4 +96,22 @@ static void do_(char **args) {
 		}
 	}
 	err("Undefined rule '%s'", args[0]);
+}
+
+static void mkdirs(char **args) {
+	char *arr, *path, *cur, *ctxa, *ctxp;
+	ctxa = arr = xstrdup(varget(args[0]));
+	while ((path = rstrtok(&ctxa, " \t"))) {
+		ctxp = path;
+		while ((cur = rstrtok(&ctxp, "/"))) {
+			if (cur != path)
+				cur[-1] = '/';
+			hostmkdir(path);
+			if (!strchr(ctxp, '/')) {
+				ctxp[-1] = '/';
+				break;
+			}
+		}
+	}
+	free(arr);
 }
