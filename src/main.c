@@ -8,65 +8,30 @@
 #include "dale.h"
 
 vec(struct task) tasks;
-vec(struct tc) tcs;
 vec(struct build) builds;
 
 static vec(char*) optparse(int argc, char *argv[]);
-static struct tc *loadtc(void);
-
-static char *upperstr(const char *s);
-static void varpfxarr(const char *var, const char *pfx, vec(char*) vec);
-static void taskvarset(const char *var, const char *name);
-static void globarr(vec(char*) *pvec);
 
 int main(int argc, char *argv[]) {
-	char *p, *p2, *p3, *p4;
-	struct tc *tc = NULL;
-	int skip;
-	size_t sz;
-	char ***cmds, **msgs;
-	size_t taskn = 1;
 	vec(char*) want;
-	char *bscript, *bdir, *reqcflags, *reqlibs;
-	size_t jobs = 0;
-	uintmax_t um;
-	bool verbose;
-	char *exeext, *dllext;
+	size_t taskn = 1;
+	char *bscript;
 
 	hostinit();
 	want = optparse(argc, argv);
 	if (*varget("_nodefvar") != '1')
 		hostsetvars();
 
-	exeext = varget("_exeext");
-	dllext = varget("_dllext");
 	bscript = vargetnull("_bscript");
 	if (!bscript)
 		bscript = "build.dale";
-	bdir = vargetnull("_bdir");
-	if (!bdir)
-		bdir = "build";
-	verbose = vargetnull("_verbose");
-	reqcflags = vargetnull("_reqcflags");
-	reqlibs = vargetnull("_reqlibs");
-	p = vargetnull("_jobs");
-	if (p) {
-		errno = 0;
-		um = strtoumax(p, NULL, 10);
-		if (um > SIZE_MAX || errno == ERANGE)
-			err("Overflow");
-		jobs = um;
-	}
 
 	parsef(bscript, true);
 
-	tc = loadtc();
-	printf("Using toolchain '%s'\n", tc->name);
-
 	for (size_t i = 0; i < vec_size(want); i++) {
-		for (size_t j = 0; j < vec_size(tasks); j++) {
-			if (!strcmp(tasks[j].name, want[i])) {
-				tasks[j].build = true;
+		for (struct task *task = tasks; task < vec_end(tasks); task++) {
+			if (!strcmp(task->name, want[i])) {
+				task->want = true;
 				goto wantfound;
 			}
 		}
@@ -74,170 +39,23 @@ int main(int argc, char *argv[]) {
 wantfound:;
 	}
 
-	if (tasks) {
-		hostmkdir(bdir);
+	for (struct task *task = tasks; task < vec_end(tasks); task++) {
+		if (want && !task->want)
+			continue;
 
-		for (struct task *task = tasks; task < vec_end(tasks); task++) {
-			if (want && !task->build)
-				continue;
+		printf("[%zu/%zu] %s\n", taskn++, want ? vec_size(want) : vec_size(tasks), task->name);
 
-			printf("[%zu/%zu] %s\n", taskn++, want ? vec_size(want) : vec_size(tasks), task->name);
-			varsetc("task", task->name);
-			varsetc("exe", task->type == EXE ? "1" : "0");
-			varsetc("lib", task->type == LIB ? "1" : "0");
-			varsetc("dll", task->type == DLL ? "1" : "0");
-			taskvarset("CFLAGS", task->name);
-			taskvarset("LIBS", task->name);
-			taskvarset("LEFLAGS", task->name);
-			taskvarset("LLFLAGS", task->name);
-			taskvarset("LDFLAGS", task->name);
-			globarr(&task->srcs);
-			globarr(&task->incs);
-			varpfxarr("CFLAGS", tc->incpfx, task->incs);
-			varpfxarr("CFLAGS", tc->defpfx, task->defs);
+		for (struct taskvar *var = task->vars; var < vec_end(task->vars); var++)
+			varsetc(var->name, var->val);
+		varsetc("_task", task->name);
+		varsetc("_type", task->type);
 
-			for (char **req = task->reqs; req < vec_end(task->reqs); req++) {
-				asprintf(&p, "HAVE_%s", *req);
-				if (!vargetnull(p)) {
-					free(p);
-					if (reqcflags && reqlibs) {
-						asprintf(&p2, "%s_NAME", *req);
-						p = vargetnull(p2);
-						free(p2);
-						if (!p)
-							p = *req;
-						varsetc("name", p);
-						p = varexpand(reqcflags);
-						p2 = hostexecout(p);
-						free(p);
-						if (p2) {
-							varappend("CFLAGS", p2);
-							free(p2);
-							p = varexpand(reqlibs);
-							p2 = hostexecout(p);
-							free(p);
-							if (p2) {
-								varappend("LIBS", p2);
-								free(p2);
-								varunset("name");
-								continue;
-							}
-						}
-					}
-					err("Required library '%s' not defined", *req);
-				} else {
-					taskvarset("CFLAGS", *req);
-					taskvarset("LIBS", *req);
-				}
-				free(p);
-			}
+		parsea((const char**)task->build->steps, vec_size(task->build->steps));
 
-			skip = asprintf(&p, "%s/%s_obj", bdir, task->name);
-			hostmkdir(p);
-			free(p);
-			for (char **src = task->srcs; src < vec_end(task->srcs); src++) {
-				asprintf(&p, "%s/%s_obj/%s", bdir, task->name, *src);
-				for (p2 = p + skip + 1; *p2; p2++) {
-					if (*p2 == '/') {
-						*p2 = 0;
-						hostmkdir(p);
-						*p2 = '/';
-					}
-				}
-				free(p);
-			}
-
-			cmds = NULL;
-			msgs = NULL;
-			sz = 0;
-
-			p2 = xstrdup("");
-			for (char **src = task->srcs; src < vec_end(task->srcs); src++) {
-				asprintf(&p, "%s/%s_obj/%s%s", bdir, task->name, *src, tc->objext);
-				asprintf(&p3, "%s %s", p2, p);
-				free(p2);
-				p2 = p3;
-				if (hostfnewer(*src, p)) {
-					task->link = true;
-					varsetc("in", *src);
-					varsetp("out", p);
-					sz++;
-					vec_push(cmds, NULL);
-					vec_push(cmds[vec_size(cmds)-1], varexpand(tc->compile));
-					varunset("in");
-					varunset("out");
-					msgs = xrealloc(msgs, sizeof(*msgs) * sz);
-					if (!verbose)
-						asprintf(&msgs[sz-1], "=> Compiling %s", *src);
-					else
-						msgs[sz-1] = cmds[sz-1][0];
-				} else {
-					free(p);
-				}
-			}
-
-			if (cmds)
-				hostexec(cmds, msgs, jobs);
-
-			for (size_t i = 0; i < sz; i++) {
-				for (size_t j = 0; j < vec_size(cmds[i]); j++)
-					free(cmds[i][j]);
-				vec_free(cmds[i]);
-				if (!verbose)
-					free(msgs[i]);
-			}
-			vec_free(cmds);
-			free(msgs);
-
-			switch (task->type) {
-				case EXE:
-					p3 = tc->linkexe;
-					p4 = exeext;
-					break;
-				case LIB:
-					p3 = tc->linklib;
-					p4 = tc->libext;
-					break;
-				case DLL:
-					p3 = tc->linkdll;
-					p4 = dllext;
-					break;
-			}
-			asprintf(&p, "%s/%s%s", bdir, task->name, p4);
-			if (task->link || !hostfexists(p)) {
-				if (!verbose)
-					printf("=> Linking %s\n", p);
-				varsetp("in", p2);
-				varsetp("out", p);
-				if (task->type != LIB)
-					varpfxarr("LIBS", tc->libpfx, task->libs);
-				p = varexpand(p3);
-				if (verbose)
-					puts(p);
-				if (system(p))
-					err("Linking failed");
-				varunset("in");
-				varunset("out");
-				if (task->type != LIB)
-					varunset("lib");
-			} else {
-				puts("(nothing to do)");
-				free(p2);
-			}
-			free(p);
-
-			varunset("task");
-			varunset("exe");
-			varunset("lib");
-			varunset("dll");
-			varunset("inc");
-			varunset("def");
-			varunset("CFLAGS");
-			varunset("LIBS");
-			varunset("LEFLAGS");
-			varunset("LLFLAGS");
-			varunset("LDFLAGS");
-		}
+		for (struct taskvar *var = task->vars; var < vec_end(task->vars); var++)
+			varunset(var->name);
+		varunset("_task");
+		varunset("_type");
 	}
 
 	hostquit();
@@ -343,113 +161,4 @@ static vec(char*) optparse(int argc, char *argv[]) {
 	}
 
 	return want;
-}
-
-static struct tc *loadtc(void) {
-	char *tcname, *lang;
-	struct tc *tc = NULL;
-	char *p, *p2, *p3;
-
-	lang = vargetnull("_lang");
-	if (!lang)
-		lang = "c";
-
-	tcname = vargetnull("_tcname");
-
-	for (struct tc *cur = tcs; cur < vec_end(tcs); cur++) {
-		if (tcname && strcmp(cur->name, tcname))
-			continue;
-		if (!cur->find || !cur->objext || !cur->libext || !cur->libpfx || !cur->incpfx || !cur->defpfx || !cur->compile || !cur->linkexe || !cur->linklib || !cur->linkdll) {
-			fprintf(stderr, "Warning: Skipping underspecified toolchain '%s'\n", cur->name);
-			continue;
-		}
-		if (strcmp(cur->lang, lang))
-			continue;
-
-		for (char **find = cur->find; find < vec_end(cur->find); find++) {
-			if ((p3 = strchr(*find, '='))) {
-				p = xstrndup(*find, p3 - *find);
-				puts(p);
-				p2 = upperstr(p);
-				free(p);
-			} else {
-				p3 = NULL;
-				p2 = upperstr(*find);
-			}
-			if (vargetnull(p2)) {
-				free(p2);
-				continue;
-			}
-			p = hostfind(p3 ? p3+1 : *find);
-			if (p) {
-				varset(p2, p);
-				if (find+1 == vec_end(cur->find))
-					tc = cur;
-			} else {
-				free(p2);
-				for (char **found = find-1; found >= cur->find; found--) {
-					p = upperstr(*found);
-					varunset(p);
-					free(p);
-				}
-				break;
-			}
-		}
-
-		if (tc)
-			break;
-	}
-
-	if (!tc) {
-		if (!tcname)
-			fputs("Error: No valid toolchain found (tried:", stderr);
-		else
-			fprintf(stderr, "Error: Unknown toolchain '%s' (known:", tcname);
-		for (struct tc *cur = tcs; cur < vec_end(tcs); cur++)
-			if (!strcmp(cur->lang, lang))
-				fprintf(stderr, " %s", cur->name);
-		fputs(")\n", stderr);
-		exit(1);
-	}
-
-	return tc;
-}
-
-static char *upperstr(const char *s) {
-	char *out = xmalloc(strlen(s) + 1);
-	for (size_t i = 0; s[i]; i++)
-		out[i] = toupper(s[i]);
-	out[strlen(s)] = 0;
-	return out;
-}
-
-static void varpfxarr(const char *var, const char *pfx, vec(char*) vec) {
-	char *out, *tmp;
-	if (!vec_size(vec))
-		return;
-	asprintf(&out, "%s%s ", pfx, vec[0]);
-	for (size_t i = 1; i < vec_size(vec); i++) {
-		asprintf(&tmp, "%s%s%s ", out, pfx, vec[i]);
-		free(out);
-		out = tmp;
-	}
-	varappend(var, out);
-	free(out);
-}
-
-static void taskvarset(const char *var, const char *name) {
-	char *p;
-	asprintf(&p, "$%s $%s_%s", var, name, var);
-	varsetp(var, varexpand(p));
-	free(p);
-}
-
-static void globarr(vec(char*) *pvec) {
-	vec(char*) vec = *pvec;
-	*pvec = NULL;
-	for (size_t j = 0; j < vec_size(vec); j++) {
-		glob(vec[j], pvec);
-		free(vec[j]);
-	}
-	vec_free(vec);
 }

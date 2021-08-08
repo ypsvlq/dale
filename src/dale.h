@@ -11,27 +11,13 @@
 #define LEN(x) (sizeof(x) / sizeof(*x))
 
 struct task {
-	enum tasktypes {
-		EXE=1,
-		LIB,
-		DLL,
-	} type;
-	char *name;
-	vec(char*) srcs;
-	vec(char*) libs;
-	vec(char*) incs;
-	vec(char*) defs;
-	vec(char*) reqs;
-	bool build, link;
-};
-
-struct tc {
-	char *lang;
-	char *name;
-	vec(char*) find;
-	char *objext, *libext;
-	char *libpfx, *incpfx, *defpfx;
-	char *compile, *linkexe, *linklib, *linkdll;
+	struct build *build;
+	char *type, *name;
+	vec(struct taskvar {
+		char *name;
+		char *val;
+	}) vars;
+	bool want;
 };
 
 struct rule {
@@ -58,7 +44,6 @@ struct pbuiltin {
 };
 
 extern vec(struct task) tasks;
-extern vec(struct tc) tcs;
 extern vec(struct build) builds;
 
 extern const char *fname;

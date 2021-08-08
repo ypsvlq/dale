@@ -10,42 +10,16 @@
 const char *fname;
 size_t line;
 
-static void loadarr(vec(char*) *vec, char *val) {
-	char *p, *p2;
-	p2 = varexpand(val);
-	p = strtok(p2, " \t");
-	while (p) {
-		vec_push(*vec, xstrdup(p));
-		p = strtok(NULL, " \t");
-	}
-	free(p2);
-}
-
 static void parse(const char *(*read)(void *data), void *data) {
-	static const char *tasktypes[] = {0, "exe", "lib", "dll"};
-	static const char *decltypes[] = {0, "task", "toolchain"};
 	static char s1[LINE_MAX], s2[LINE_MAX];
 	const char *buf, *p;
 	char *p2, *cur, *ctx;
 	size_t n;
 	char **args;
-	enum {NONE, TASK, TOOLCHAIN, BUILD, RULE} state;
+	enum {NONE, TASK, BUILD, RULE} state;
 	struct task *task;
-	struct tc *tc;
 	struct build *build;
 	struct rule *rule;
-	struct vars {
-		struct var {
-			char *name;
-			char **out;
-		} a[11];
-	} vars;
-	struct lists {
-		struct list {
-			char *name;
-			vec(char*) *out;
-		} a[6];
-	} lists;
 
 	state = NONE;
 	while ((buf = read(data))) {
@@ -101,30 +75,7 @@ static void parse(const char *(*read)(void *data), void *data) {
 					varset(xstrdup(s1), varexpand(s2));
 				continue;
 			} else if (sscanf(p, "%[^( ] ( %[^)]", s1, s2) == 2) {
-				if (!strcmp(s1, "toolchain")) {
-					state = TOOLCHAIN;
-					vec_push(tcs, (struct tc){0});
-					tc = &tcs[vec_size(tcs)-1];
-					tc->name = xstrdup(s2);
-					vars = (struct vars){{
-						{"lang", &tc->lang},
-						{"objext", &tc->objext},
-						{"libext", &tc->libext},
-						{"libpfx", &tc->libpfx},
-						{"incpfx", &tc->incpfx},
-						{"defpfx", &tc->defpfx},
-						{"compile", &tc->compile},
-						{"linkexe", &tc->linkexe},
-						{"linklib", &tc->linklib},
-						{"linkdll", &tc->linkdll},
-						{0}
-					}};
-					lists = (struct lists){{
-						{"find", &tc->find},
-						{0}
-					}};
-					continue;
-				} else if (!strcmp(s1, "build")) {
+				if (!strcmp(s1, "build")) {
 					state = BUILD;
 					vec_push(builds, (struct build){.name = xstrdup(s2)});
 					build = &builds[vec_size(builds)-1];
@@ -148,21 +99,18 @@ static void parse(const char *(*read)(void *data), void *data) {
 						err("Invalid task name '%s'", s2);
 					state = TASK;
 					vec_push(tasks, (struct task){0});
-					task = &tasks[vec_size(tasks)-1];
+					task = vec_end(tasks) - 1;
 					task->name = xstrdup(s2);
-					for (size_t i = 1; i < LEN(tasktypes); i++)
-						if (!strcmp(s1, tasktypes[i]))
-							task->type = i;
-					if (!task->type)
-						err("Invalid task type '%s'", s1);
-					lists = (struct lists){{
-						{"src", &task->srcs},
-						{"lib", &task->libs},
-						{"inc", &task->incs},
-						{"def", &task->defs},
-						{"req", &task->reqs},
-						{0}
-					}};
+					p = strchr(s1, '.');
+					task->type = xstrdup(p ? p+1 : s1);
+					for (struct build *build = builds; build < vec_end(builds); build++) {
+						if ((!p && !strcmp(build->name, "c")) || (p && !strncmp(build->name, s1, p-s1))) {
+							task->build = build;
+							goto buildfound;
+						}
+					}
+					err("Unknown build '%s'", p ? xstrndup(s1, p-s1) : "c");
+buildfound:
 					continue;
 				}
 			}
@@ -173,24 +121,23 @@ static void parse(const char *(*read)(void *data), void *data) {
 			} else if (state == RULE) {
 				vec_push(rule->cmds, xstrdup(p));
 				continue;
-			} else if (state != NONE && sscanf(p, "%[^: ] : %[^\n]", s1, s2) == 2) {
-				if (state == TASK || state == TOOLCHAIN) {
-					for (struct list *l = lists.a; l->name; l++) {
-						if (!strcmp(s1, l->name)) {
-							loadarr(l->out, s2);
-							goto assigned;
-						}
+			} else if (state == TASK && sscanf(p, "%[^: ] : %[^\n]", s1, s2) == 2) {
+				for (struct taskvar *var = task->vars; var < vec_end(task->vars); var++) {
+					if (!strcmp(var->name, s1)) {
+						p2 = varexpand(s2);
+						asprintf(&cur, "%s %s", var->val, p2);
+						free(var->val);
+						free(p2);
+						var->val = cur;
+						continue;
 					}
 				}
-				if (state == TOOLCHAIN) {
-					for (struct var *v = vars.a; v->name; v++) {
-						if (!strcmp(s1, v->name)) {
-							*(v->out) = xstrdup(s2);
-							goto assigned;
-						}
-					}
-				}
-				err("Unknown %s variable '%s'", decltypes[state], s1);
+				vec_push(task->vars, (struct taskvar){0});
+				task->vars[vec_size(task->vars)-1] = (struct taskvar){
+					.name = xstrdup(s1),
+					.val = varexpand(s2),
+				};
+				continue;
 			}
 		}
 		err("Syntax error");
