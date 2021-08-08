@@ -24,7 +24,7 @@ static void do_(char **args) {
 	char *ictx, *octx, *icur, *ocur;
 	bool iarr, oarr, exec;
 	char *msg, *tmp;
-	vec(char*) cmds = NULL;
+	vec(vec(char*)) cmds = NULL;
 	vec(char*) msgs = NULL;
 
 	for (struct rule *rule = build->rules; rule < vec_end(build->rules); rule++) {
@@ -45,7 +45,9 @@ static void do_(char **args) {
 					if (hostfnewer(icur, ocur)) {
 						varsetc("in", icur);
 						varsetc("out", ocur);
-						vec_push(cmds, varexpand(rule->cmds[0]));
+						vec_push(cmds, NULL);
+						for (size_t i = 0; i < vec_size(rule->cmds); i++)
+							vec_push(cmds[vec_size(cmds)-1], varexpand(rule->cmds[i]));
 						asprintf(&msg, "%s %s", rule->name, icur);
 						vec_push(msgs, msg);
 						varunset("in");
@@ -74,7 +76,9 @@ static void do_(char **args) {
 				if (exec) {
 					varsetc("in", in);
 					varsetc("out", out);
-					vec_push(cmds, varexpand(rule->cmds[0]));
+					vec_push(cmds, NULL);
+					for (size_t i = 0; i < vec_size(rule->cmds); i++)
+						vec_push(cmds[0], varexpand(rule->cmds[i]));
 					asprintf(&msg, "%s %s", rule->name, iarr ? out : in);
 					vec_push(msgs, msg);
 					varunset("in");
@@ -84,10 +88,12 @@ static void do_(char **args) {
 				err("More outputs than inputs");
 			}
 
-			hostexec(cmds, msgs, vec_size(cmds), 1);
+			hostexec(cmds, msgs, 0);
 
 			for (size_t i = 0; i < vec_size(cmds); i++) {
-				free(cmds[i]);
+				for (size_t j = 0; j < vec_size(cmds[i]); j++)
+					free(cmds[i][j]);
+				vec_free(cmds[i]);
 				free(msgs[i]);
 			}
 			vec_free(cmds);

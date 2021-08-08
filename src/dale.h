@@ -104,5 +104,5 @@ void *hostdopen(const char *path);
 char *hostdread(void *dir);
 void hostdclose(void *dir);
 bool hostisdir(const char *path);
-void hostexec(char **cmds, char **msgs, size_t len, size_t jobs);
+void hostexec(vec(vec(char*)) cmds, char **msgs, size_t jobs);
 char *hostexecout(const char *cmd);

@@ -138,14 +138,14 @@ bool hostisdir(const char *path) {
 
 struct tdata {
 	pthread_mutex_t mtx;
-	char **cmds;
+	vec(vec(char*)) cmds;
 	char **msgs;
 	size_t len;
 };
 
 static void *thread(void *tdata) {
 	struct tdata *data = tdata;
-	char *p;
+	vec(char*) cmds;
 	int status;
 	while (1) {
 		if (pthread_mutex_lock(&data->mtx))
@@ -155,18 +155,19 @@ static void *thread(void *tdata) {
 			return 0;
 		}
 		puts(*data->msgs++);
-		p = *data->cmds++;
+		cmds = *data->cmds++;
 		data->len--;
 		if (pthread_mutex_unlock(&data->mtx))
 			err("pthread_mutex_unlock: %s", strerror(errno));
-		if ((status = system(p)))
-			err("Command failed (exit code %d)", status);
+		for (size_t i = 0; i < vec_size(cmds); i++)
+			if ((status = system(cmds[i])))
+				err("Command failed (exit code %d)", status);
 	}
 }
 
-void hostexec(char **cmds, char **msgs, size_t len, size_t jobs) {
+void hostexec(vec(vec(char*)) cmds, char **msgs, size_t jobs) {
 	pthread_t *threads;
-	struct tdata data = {.cmds = cmds, .msgs = msgs, .len = len};
+	struct tdata data = {.cmds = cmds, .msgs = msgs, .len = vec_size(cmds)};
 
 	if (!jobs) {
 #if defined __linux__ || defined __OpenBSD__ || defined __NetBSD__ || defined __FreeBSD__ || defined __DragonFly__
@@ -176,8 +177,8 @@ void hostexec(char **cmds, char **msgs, size_t len, size_t jobs) {
 #endif
 	}
 
-	if (jobs > len)
-		jobs = len;
+	if (jobs > data.len)
+		jobs = data.len;
 
 	if (pthread_mutex_init(&data.mtx, NULL))
 		err("pthread_mutex_init: %s", strerror(errno));

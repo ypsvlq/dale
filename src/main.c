@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
 	struct tc *tc = NULL;
 	int skip;
 	size_t sz;
-	char **arr, **msgs;
+	char ***cmds, **msgs;
 	size_t taskn = 1;
 	vec(char*) want;
 	char *bscript, *bdir, *reqcflags, *reqlibs;
@@ -147,7 +147,7 @@ wantfound:;
 				free(p);
 			}
 
-			arr = NULL;
+			cmds = NULL;
 			msgs = NULL;
 			sz = 0;
 
@@ -162,29 +162,31 @@ wantfound:;
 					varsetc("in", *src);
 					varsetp("out", p);
 					sz++;
-					arr = xrealloc(arr, sizeof(*arr) * sz);
-					arr[sz-1] = varexpand(tc->compile);
+					vec_push(cmds, NULL);
+					vec_push(cmds[vec_size(cmds)-1], varexpand(tc->compile));
 					varunset("in");
 					varunset("out");
 					msgs = xrealloc(msgs, sizeof(*msgs) * sz);
 					if (!verbose)
 						asprintf(&msgs[sz-1], "=> Compiling %s", *src);
 					else
-						msgs[sz-1] = arr[sz-1];
+						msgs[sz-1] = cmds[sz-1][0];
 				} else {
 					free(p);
 				}
 			}
 
-			if (arr)
-				hostexec(arr, msgs, sz, jobs);
+			if (cmds)
+				hostexec(cmds, msgs, jobs);
 
 			for (size_t i = 0; i < sz; i++) {
-				free(arr[i]);
+				for (size_t j = 0; j < vec_size(cmds[i]); j++)
+					free(cmds[i][j]);
+				vec_free(cmds[i]);
 				if (!verbose)
 					free(msgs[i]);
 			}
-			free(arr);
+			vec_free(cmds);
 			free(msgs);
 
 			switch (task->type) {
