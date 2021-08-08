@@ -118,6 +118,6 @@ void glob(char *pattern, vec(char*) *out) {
 	if (nextdir)
 		*nextdir = '/';
 
-	qsort(vec+vec_size(out), vec_size(vec)-vec_size(out), sizeof(*vec), qsortstr);
+	qsort(vec+vec_size(*out), vec_size(vec)-vec_size(*out), sizeof(*vec), qsortstr);
 	*out = vec;
 }
