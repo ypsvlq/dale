@@ -5,11 +5,13 @@
 static char *find(vec(char*));
 static char *map(vec(char*));
 static char *stripext(vec(char*));
+static char *glob_(vec(char*));
 
 const struct ebuiltin ebuiltins[] = {
 	{"find", find, 1},
 	{"map", map, 2},
 	{"stripext", stripext, 1},
+	{"glob", glob_, 1},
 	{0}
 };
 
@@ -51,5 +53,31 @@ static char *stripext(vec(char*) args) {
 	s = varexpand(args[0]);
 	out = xstrndup(s, strrchr(s, '.') - s);
 	free(s);
+	return out;
+}
+
+static char *glob_(vec(char*) args) {
+	char *pattern, *out;
+	size_t outlen, pathlen;
+	vec(char*) paths = NULL;
+
+	pattern = varexpand(args[0]);
+	glob(pattern, &paths);
+
+	out = NULL;
+	outlen = 0;
+	for (size_t i = 0; i < vec_size(paths); i++) {
+		pathlen = strlen(paths[i]);
+		out = xrealloc(out, outlen + pathlen + 1);
+		memcpy(out+outlen, paths[i], pathlen);
+		outlen += pathlen;
+		out[outlen++] = ' ';
+		free(paths[i]);
+	}
+	if (out)
+		out[outlen-1] = 0;
+
+	free(pattern);
+	vec_free(paths);
 	return out;
 }
