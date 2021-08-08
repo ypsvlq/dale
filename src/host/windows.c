@@ -229,14 +229,14 @@ bool hostisdir(const char *path) {
 
 struct tdata {
 	CRITICAL_SECTION cs;
-	char **cmds;
+	vec(vec(char*)) cmds;
 	char **msgs;
 	size_t len;
 };
 
 static DWORD WINAPI thread(LPVOID tdata) {
 	struct tdata *data = tdata;
-	char *p;
+	vec(char*) cmds;
 	int status;
 	while (1) {
 		EnterCriticalSection(&data->cs);
@@ -245,26 +245,27 @@ static DWORD WINAPI thread(LPVOID tdata) {
 			return 0;
 		}
 		puts(*data->msgs++);
-		p = *data->cmds++;
+		cmds = *data->cmds++;
 		data->len--;
 		LeaveCriticalSection(&data->cs);
-		if ((status = system(p)))
-			err("Command failed (exit code %d)", status);
+		for (size_t i = 0; i < vec_size(cmds); i++)
+			if ((status = system(cmds[i])))
+				err("Command failed (exit code %d)", status);
 	}
 }
 
-void hostexec(char **cmds, char **msgs, size_t len, size_t jobs) {
+void hostexec(vec(vec(char*)) cmds, char **msgs, size_t jobs) {
 	SYSTEM_INFO si;
 	HANDLE *threads;
-	struct tdata data = {.cmds = cmds, .msgs = msgs, .len = len};
+	struct tdata data = {.cmds = cmds, .msgs = msgs, .len = vec_size(cmds)};
 
 	if (!jobs) {
 		GetSystemInfo(&si);
 		jobs = si.dwNumberOfProcessors;
 	}
 
-	if (jobs > len)
-		jobs = len;
+	if (jobs > data.len)
+		jobs = data.len;
 
 	InitializeCriticalSection(&data.cs);
 	threads = xmalloc(jobs * sizeof(*threads));
