@@ -65,7 +65,7 @@ char *rstrtok(char **sp, const char *delim);
 
 void glob(char *pattern, vec(char*) *out);
 
-void parsea(const char *arr[], size_t len);
+void parsea(vec(char*) vec);
 void parsef(const char *path, bool required);
 
 void varset(char *name, char *val);

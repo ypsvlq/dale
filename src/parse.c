@@ -148,7 +148,7 @@ assigned:;
 }
 
 struct reada {
-	const char **arr;
+	char **arr;
 	size_t len;
 };
 
@@ -159,9 +159,9 @@ static const char *reada(void *data) {
 	return NULL;
 }
 
-void parsea(const char *arr[], size_t len) {
+void parsea(vec(char*) vec) {
 	fname = "<builtin>";
-	parse(reada, &(struct reada){arr, len});
+	parse(reada, &(struct reada){vec, vec_size(vec)});
 }
 
 static const char *readf(void *data) {
