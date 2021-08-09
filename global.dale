@@ -1,64 +1,18 @@
-toolchain(msvc)
-	lang: c
-	find: cl link lib
-	objext: .obj
-	libext: .lib
-	libpfx: /DEFAULTLIB:
-	incpfx: /I
-	defpfx: /D
-	compile: $CL $CFLAGS /M$[!msvc_staticcrt D]$[msvc_staticcrt T]$[dll  /LD]$[debug d /Zi /FS /Fd:$_bdir/$task] $[optfast /O2] $[optsize /O1] /nologo /c /Fo:$out $in
-	linkexe: $LINK $LFLAGS $LEFLAGS $[debug /DEBUG] /NOLOGO /OUT:$out $in $LIBS
-	linklib: $LIB $LLFLAGS /NOLOGO /OUT:$out $in
-	linkdll: $LINK $LFLAGS $LDFLAGS $[debug /DEBUG] /NOLOGO /DLL /OUT:$out $in $LIBS
+build(c)
+	bdir ?= build
+	objdir ?= $bdir/$(_task)_obj
+	outdir ?= $bdir
 
-toolchain(clang)
-	lang: c
-	find: clang ar
-	objext: .o
-	libext: .a
-	libpfx: -l
-	incpfx: -I
-	defpfx: -D
-	compile: $CLANG $CFLAGS $[debug -g] $[optfast -O3] $[optsize -Oz] $[lib -fPIC] $[dll -fPIC] -c -o $out $in
-	linkexe: $CLANG $LFLAGS $LEFLAGS -o $out $in $LIBS
-	linklib: $AR -rc $LLFLAGS $out $in
-	linkdll: $CLANG $LFLAGS $LDFLAGS -shared -o $out $in $LIBS
+	LIBS += ${map lib l $libpfx$l}
+	CFLAGS += ${map inc i $incpfx$i}
+	CFLAGS += ${map def d $defpfx$d}
 
-toolchain(gcc)
-	lang: c
-	find: gcc ar
-	objext: .o
-	libext: .a
-	libpfx: -l
-	incpfx: -I
-	defpfx: -D
-	compile: $GCC $CFLAGS $[debug -g] $[optfast -O3] $[optsize -Os] $[lib -fPIC] $[dll -fPIC] -c -o $out $in
-	linkexe: $GCC $LFLAGS $LEFLAGS -o $out $in $LIBS
-	linklib: $AR -rc $LLFLAGS $out $in
-	linkdll: $GCC $LFLAGS $LDFLAGS -shared -o $out $in $LIBS
+	src = ${map src s ${glob $s}}
+	obj = ${map src s $objdir/${stripext $s}$objext}
+	out = $outdir/$_task$($(_type)ext)
 
-toolchain(clang++)
-	lang: c++
-	find: clang=clang++ ar
-	objext: .o
-	libext: .a
-	libpfx: -l
-	incpfx: -I
-	defpfx: -D
-	compile: $CLANG $CFLAGS $[debug -g] $[optfast -O3] $[optsize -Oz] $[lib -fPIC] $[dll -fPIC] -c -o $out $in
-	linkexe: $CLANG $LFLAGS $LEFLAGS -o $out $in $LIBS
-	linklib: $AR -rc $LLFLAGS $out $in
-	linkdll: $CLANG $LFLAGS $LDFLAGS -shared -o $out $in $LIBS
+	@mkdirs obj
+	@mkdirs out
 
-toolchain(g++)
-	lang: c++
-	find: gcc=g++ ar
-	objext: .o
-	libext: .a
-	libpfx: -l
-	incpfx: -I
-	defpfx: -D
-	compile: $GCC $CFLAGS $[debug -g] $[optfast -O3] $[optsize -Os] $[lib -fPIC] $[dll -fPIC] -c -o $out $in
-	linkexe: $GCC $LFLAGS $LEFLAGS -o $out $in $LIBS
-	linklib: $AR -rc $LLFLAGS $out $in
-	linkdll: $GCC $LFLAGS $LDFLAGS -shared -o $out $in $LIBS
+	@do Compile obj src
+	@do Link out obj
