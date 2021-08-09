@@ -79,6 +79,8 @@ static void parse(const char *(*read)(void *data), void *data) {
 					state = BUILD;
 					vec_push(builds, (struct build){.name = xstrdup(s2)});
 					build = &builds[vec_size(builds)-1];
+					build->fname = xstrdup(fname);
+					build->line = line;
 					continue;
 				} else if (!strcmp(s1, "rule")) {
 					state = RULE;
@@ -159,8 +161,9 @@ static const char *reada(void *data) {
 	return NULL;
 }
 
-void parsea(vec(char*) vec) {
-	fname = "<builtin>";
+void parsea(vec(char*) vec, const char *name, size_t linestart) {
+	fname = name;
+	line = linestart;
 	parse(reada, &(struct reada){vec, vec_size(vec)});
 }
 

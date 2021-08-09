@@ -29,6 +29,8 @@ struct build {
 	char *name;
 	vec(char*) steps;
 	vec(struct rule) rules;
+	const char *fname;
+	size_t line;
 };
 
 struct ebuiltin {
@@ -65,7 +67,7 @@ char *rstrtok(char **sp, const char *delim);
 
 void glob(char *pattern, vec(char*) *out);
 
-void parsea(vec(char*) vec);
+void parsea(vec(char*) vec, const char *name, size_t startline);
 void parsef(const char *path, bool required);
 
 void varset(char *name, char *val);

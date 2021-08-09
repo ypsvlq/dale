@@ -50,7 +50,7 @@ wantfound:;
 		varsetc("_task", task->name);
 		varsetc("_type", task->type);
 
-		parsea(task->build->steps);
+		parsea(task->build->steps, task->build->fname, task->build->line);
 
 		for (struct taskvar *var = task->vars; var < vec_end(task->vars); var++)
 			varunset(var->name);
