@@ -70,6 +70,7 @@ void glob(char *pattern, vec(char*) *out);
 void parsea(vec(char*) vec, const char *name, size_t startline);
 void parsef(const char *path, bool required);
 
+void newvarframe(void);
 void varset(char *name, char *val);
 void varsetp(const char *name, char *val);
 void varsetc(const char *name, const char *val);

@@ -43,17 +43,13 @@ wantfound:;
 
 		printf("[%zu/%zu] %s\n", taskn++, want ? vec_size(want) : vec_size(tasks), task->name);
 
+		newvarframe();
 		varsetc("_task", task->name);
 		varsetc("_type", task->type);
 		for (struct taskvar *var = task->vars; var < vec_end(task->vars); var++)
 			varsetc(var->name, var->val);
 
 		parsea(task->build->steps, task->build->fname, task->build->line);
-
-		varunset("_task");
-		varunset("_type");
-		for (struct taskvar *var = task->vars; var < vec_end(task->vars); var++)
-			varunset(var->name);
 	}
 
 	hostquit();

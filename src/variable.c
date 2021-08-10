@@ -6,13 +6,17 @@
 
 #define BUCKETS 1000
 
-static struct var {
+const char valid[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-";
+
+struct var {
 	struct var *next;
 	char *name, *val;
 	bool freename, freeval;
-} *tbl[BUCKETS];
+};
 
-const char valid[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-";
+static struct var *tbl[BUCKETS];
+static vec(char*) frame;
+static bool clearframe;
 
 static uint32_t hash(const char *str) {
 	uint32_t h = 0x811C9DC5;
@@ -44,6 +48,21 @@ static void varset_(char *name, char *val, bool freename, bool freeval) {
 	var->freename = freename;
 	var->freeval = freeval;
 	tbl[idx] = var;
+	if (frame)
+		vec_push(frame, var->name);
+}
+
+void newvarframe(void) {
+	if (!frame) {
+		vec_resize(frame, 16);
+	} else {
+		clearframe = true;
+		while (vec_size(frame)) {
+			varunset(frame[vec_size(frame)-1]);
+			vec_pop(frame);
+		}
+		clearframe = false;
+	}
 }
 
 void varset(char *name, char *val) {
@@ -64,9 +83,13 @@ void varappend(const char *name, const char *val) {
 	for (struct var *var = tbl[idx]; var; var = var->next) {
 		if (!strcmp(var->name, name)) {
 			asprintf(&p, "%s %s", var->val, val);
-			if (var->freeval)
-				free(var->val);
-			var->val = p;
+			if (!frame) {
+				if (var->freeval)
+					free(var->val);
+				var->val = p;
+			} else {
+				varset_(var->name, p, false, true);
+			}
 			return;
 		}
 	}
@@ -90,6 +113,14 @@ void varunset(const char *name) {
 		}
 	}
 	if (tmp) {
+		if (frame && !clearframe) {
+			for (size_t i = vec_size(frame)-1; i; i--) {
+				if (!strcmp(frame[i], tmp->name)) {
+					vec_erase(frame, i);
+					break;
+				}
+			}
+		}
 		if (tmp->freename)
 			free(tmp->name);
 		if (tmp->freeval)
