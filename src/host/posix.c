@@ -10,29 +10,7 @@
 #include <pthread.h>
 #include "../dale.h"
 
-static char **pathdirs;
-static size_t npathdirs;
-
 void hostinit(void) {
-	char *path, *p;
-
-	path = getenv("PATH");
-	if (path && *path)
-		path = xstrdup(path);
-	else
-		err("PATH unset");
-	npathdirs = 1;
-	p = path;
-	while ((p = strchr(p, ':'))) {
-		npathdirs++;
-		p++;
-	}
-	pathdirs = xmalloc(sizeof(*pathdirs) * npathdirs);
-	p = strtok(path, ":");
-	for (size_t i = 0; i < npathdirs; i++) {
-		pathdirs[i] = p;
-		p = strtok(NULL, ":");
-	}
 }
 
 void hostquit(void) {
@@ -71,26 +49,6 @@ char **hostcfgs(void) {
 void hostmkdir(const char *path) {
 	if (mkdir(path, 0755) == -1 && errno != EEXIST)
 		err("mkdir: %s", strerror(errno));
-}
-
-char *hostfind(const char *name) {
-	char *path, *qpath;
-	for (size_t i = 0; i < npathdirs; i++) {
-		asprintf(&path, "%s/%s", pathdirs[i], name);
-		if (!faccessat(AT_FDCWD, path, X_OK, AT_EACCESS)) {
-			if (strpbrk(path, " ")) {
-				asprintf(&qpath, "\"%s\"", path);
-				free(path);
-				return qpath;
-			} else {
-				return path;
-			}
-		} else if (errno != ENOENT) {
-			err("faccessat '%s': %s", path, strerror(errno));
-		}
-		free(path);
-	}
-	return NULL;
 }
 
 bool hostfnewer(const char *path1, const char *path2) {

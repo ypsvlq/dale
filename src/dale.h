@@ -85,7 +85,6 @@ void hostquit(void);
 void hostsetvars(void);
 char **hostcfgs(void);
 void hostmkdir(const char *path);
-char *hostfind(const char *name);
 bool hostfnewer(const char *path1, const char *path2);
 bool hostfexists(const char *path);
 void *hostdopen(const char *path);

@@ -2,12 +2,9 @@
 #include <windows.h>
 #include <stdlib.h>
 #include <inttypes.h>
-#include <shlwapi.h>
 #include "../dale.h"
 
 static UINT defaultcp;
-static WCHAR **pathexts;
-static size_t npathexts;
 
 static PWSTR mbtows(const char *s) {
 	PWSTR ws;
@@ -48,25 +45,8 @@ static char *winerr(void) {
 }
 
 void hostinit(void) {
-	static WCHAR exts[_MAX_ENV];
-	WCHAR *p, *ctx;
-
 	defaultcp = GetConsoleOutputCP();
 	SetConsoleOutputCP(CP_UTF8);
-
-	if (!GetEnvironmentVariableW(L"PATHEXT", exts, LEN(exts)))
-		err("Could not get PATHEXT: %s", winerr());
-	p = exts;
-	do {
-		npathexts++;
-		p++;
-	} while ((p = wcschr(p, L';')));
-	pathexts = xmalloc(sizeof(*pathexts) * npathexts);
-	p = wcstok_s(exts, L";", &ctx);
-	for (size_t i = 0; i < npathexts; i++) {
-		pathexts[i] = p;
-		p = wcstok_s(NULL, L";", &ctx);
-	}
 }
 
 void hostquit(void) {
@@ -97,37 +77,6 @@ void hostmkdir(const char *path) {
 	if (!CreateDirectoryW(wpath, NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
 		err("Could not create directory '%s': %s", path, winerr());
 	free(wpath);
-}
-
-char *hostfind(const char *name) {
-	PWSTR wpath;
-	char *path, *qpath;
-	size_t len;
-
-	wpath = xmalloc(MAX_PATH * sizeof(*wpath));
-	if (!MultiByteToWideChar(CP_UTF8, 0, name, -1, wpath, MAX_PATH))
-		err("MultiByteToWideChar '%s' failed", name);
-
-	len = wcslen(wpath);
-	for (size_t i = 0; i < npathexts; i++) {
-		if (len + wcslen(pathexts[i]) + 1 >= MAX_PATH)
-			continue;
-		wcscat(wpath, pathexts[i]);
-		if (PathFindOnPathW(wpath, NULL)) {
-			path = wstomb(wpath);
-			if (strpbrk(path, " \t&[]{}^=;!'+,`~")) {
-				asprintf(&qpath, "\"%s\"", path);
-				free(path);
-				return qpath;
-			} else {
-				return path;
-			}
-		}
-		wpath[len] = 0;
-	}
-
-	free(wpath);
-	return NULL;
 }
 
 bool hostfnewer(const char *path1, const char *path2) {

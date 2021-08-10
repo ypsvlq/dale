@@ -2,22 +2,16 @@
 #include <string.h>
 #include "dale.h"
 
-static char *find(vec(char*));
 static char *map(vec(char*));
 static char *stripext(vec(char*));
 static char *glob_(vec(char*));
 
 const struct ebuiltin ebuiltins[] = {
-	{"find", find, 1},
 	{"map", map, 2},
 	{"stripext", stripext, 1},
 	{"glob", glob_, 1},
 	{0}
 };
-
-static char *find(vec(char*) args) {
-	return hostfind(args[0]);
-}
 
 static char *map(vec(char*) args) {
 	char *out = NULL;
