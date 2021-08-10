@@ -3,9 +3,8 @@ build(c)
 	objdir ?= $bdir/$(_task)_obj
 	outdir ?= $bdir
 
-	LIBS += ${map lib l $libpfx$l}
-	CFLAGS += ${map inc i $incpfx$i}
-	CFLAGS += ${map def d $defpfx$d}
+	LIBS += ${map lib l $libpfx$l} $($(_task)_LIBS)
+	CFLAGS += ${map inc i $incpfx$i} ${map def d $defpfx$d} $($(_task)_CFLAGS)
 
 	src = ${map src s ${glob $s}}
 	obj = ${map src s $objdir/${stripext $s}$objext}
