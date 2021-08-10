@@ -32,6 +32,15 @@
 		vec_setsize(vec, Vsize+1); \
 	} while (0) \
 
+#define vec_erase(vec,idx) \
+	do { \
+		if (vec) { \
+			size_t Vnewsize = vec_size(vec) - 1; \
+			vec_setsize(vec, Vnewsize); \
+			memmove(vec+idx, vec+idx+1, (Vnewsize-idx) * sizeof(*(vec))); \
+		} \
+	} while (0) \
+
 #define vec_pop(vec) vec_setsize(vec, vec_size(vec) - 1)
 
 #define vec_free(vec) free((vec) ? &((size_t*)(vec))[-2] : NULL)
