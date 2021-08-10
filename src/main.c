@@ -2,9 +2,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include <ctype.h>
-#include <inttypes.h>
-#include <errno.h>
 #include "dale.h"
 
 vec(struct task) tasks;
@@ -18,14 +15,15 @@ int main(int argc, char *argv[]) {
 	char *bscript;
 
 	hostinit();
+
 	want = optparse(argc, argv);
+
 	if (*varget("_nodefvar") != '1')
 		hostsetvars();
 
 	bscript = vargetnull("_bscript");
 	if (!bscript)
 		bscript = "build.dale";
-
 	parsef(bscript, true);
 
 	for (size_t i = 0; i < vec_size(want); i++) {
@@ -45,17 +43,17 @@ wantfound:;
 
 		printf("[%zu/%zu] %s\n", taskn++, want ? vec_size(want) : vec_size(tasks), task->name);
 
-		for (struct taskvar *var = task->vars; var < vec_end(task->vars); var++)
-			varsetc(var->name, var->val);
 		varsetc("_task", task->name);
 		varsetc("_type", task->type);
+		for (struct taskvar *var = task->vars; var < vec_end(task->vars); var++)
+			varsetc(var->name, var->val);
 
 		parsea(task->build->steps, task->build->fname, task->build->line);
 
-		for (struct taskvar *var = task->vars; var < vec_end(task->vars); var++)
-			varunset(var->name);
 		varunset("_task");
 		varunset("_type");
+		for (struct taskvar *var = task->vars; var < vec_end(task->vars); var++)
+			varunset(var->name);
 	}
 
 	hostquit();
