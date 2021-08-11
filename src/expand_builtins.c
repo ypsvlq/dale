@@ -7,7 +7,7 @@ static char *stripext(vec(char*));
 static char *glob_(vec(char*));
 
 const struct ebuiltin ebuiltins[] = {
-	{"map", map, 2},
+	{"map", map, 1},
 	{"stripext", stripext, 1},
 	{"glob", glob_, 1},
 	{0}
@@ -19,21 +19,21 @@ static char *map(vec(char*) args) {
 	char *arr, *cur, *p, *ctx;
 	size_t n;
 
-	if (vec_size(args) < 3)
+	if (vec_size(args) < 2)
 		err("Nothing to map");
 
 	arr = xstrdup(varget(args[0]));
 	ctx = arr;
 	while ((cur = rstrtok(&ctx, " \t"))) {
-		varsetc(args[1], cur);
-		p = varexpand(args[2]);
+		varsetc("_", cur);
+		p = varexpand(args[1]);
 		n = strlen(p);
 		out = xrealloc(out, len+n+2);
 		memcpy(out+len, p, n);
 		len += n;
 		out[len++] = ' ';
 		free(p);
-		varunset(args[1]);
+		varunset("_");
 	}
 
 	free(arr);

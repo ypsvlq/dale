@@ -3,11 +3,11 @@ build(c)
 	objdir ?= $bdir/$(_task)_obj
 	outdir ?= $bdir
 
-	LIBS += ${map lib l $libpfx$l} $($(_task)_LIBS)
-	CFLAGS += ${map inc i $incpfx$i} ${map def d $defpfx$d} $($(_task)_CFLAGS)
+	LIBS += ${map lib $libpfx$_} $($(_task)_LIBS)
+	CFLAGS += ${map inc $incpfx$_} ${map def $defpfx$_} $($(_task)_CFLAGS)
 
-	src = ${map src s ${glob $s}}
-	obj = ${map src s $objdir/${stripext $s}$objext}
+	src = ${map src ${glob $_}}
+	obj = ${map src $objdir/${stripext $_}$objext}
 	out = $outdir/$_task$($(_type)ext)
 
 	@mkdirs obj
