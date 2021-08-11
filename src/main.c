@@ -122,10 +122,16 @@ static vec(char*) optparse(int argc, char *argv[]) {
 				parsef(p, false);
 				free(p);
 			}
-			if (gflag && !*(pdir+1)) {
-				for (size_t i = 0; i < vec_size(gflag); i++) {
-					asprintf(&p, "%s/%s.dale", *pdir, gflag[i]);
-					parsef(p, true);
+			if (!*(pdir+1)) {
+				if (gflag) {
+					for (size_t i = 0; i < vec_size(gflag); i++) {
+						asprintf(&p, "%s/%s.dale", *pdir, gflag[i]);
+						parsef(p, true);
+						free(p);
+					}
+				} else {
+					asprintf(&p, "%s/default.dale", *pdir);
+					parsef(p, false);
 					free(p);
 				}
 			}
