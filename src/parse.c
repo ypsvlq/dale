@@ -81,7 +81,7 @@ static void parse(const char *(*read)(void *data), void *data) {
 				if (!strcmp(s1, "build")) {
 					state = BUILD;
 					vec_push(builds, (struct build){.name = xstrdup(s2)});
-					build = &builds[vec_size(builds)-1];
+					build = &builds[vec_len(builds)-1];
 					build->fname = xstrdup(fname);
 					build->line = line;
 					continue;
@@ -138,7 +138,7 @@ buildfound:
 					}
 				}
 				vec_push(task->vars, (struct taskvar){0});
-				task->vars[vec_size(task->vars)-1] = (struct taskvar){
+				task->vars[vec_len(task->vars)-1] = (struct taskvar){
 					.name = xstrdup(s1),
 					.val = varexpand(s2),
 				};
@@ -167,7 +167,7 @@ static const char *reada(void *data) {
 void parsea(vec(char*) vec, const char *name, size_t linestart) {
 	fname = name;
 	line = linestart;
-	parse(reada, &(struct reada){vec, vec_size(vec)});
+	parse(reada, &(struct reada){vec, vec_len(vec)});
 }
 
 static const char *readf(void *data) {

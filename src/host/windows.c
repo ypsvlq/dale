@@ -197,7 +197,7 @@ static DWORD WINAPI thread(LPVOID tdata) {
 		cmds = *data->cmds++;
 		data->len--;
 		LeaveCriticalSection(&data->cs);
-		for (size_t i = 0; i < vec_size(cmds); i++)
+		for (size_t i = 0; i < vec_len(cmds); i++)
 			if ((status = system(cmds[i])))
 				err("Command failed (exit code %d)", status);
 	}
@@ -206,7 +206,7 @@ static DWORD WINAPI thread(LPVOID tdata) {
 void hostexec(vec(vec(char*)) cmds, char **msgs, size_t jobs) {
 	SYSTEM_INFO si;
 	HANDLE *threads;
-	struct tdata data = {.cmds = cmds, .msgs = msgs, .len = vec_size(cmds)};
+	struct tdata data = {.cmds = cmds, .msgs = msgs, .len = vec_len(cmds)};
 
 	if (!jobs) {
 		GetSystemInfo(&si);

@@ -50,7 +50,7 @@ static char *glob_(char **args) {
 	glob(args[0], &paths);
 	out = NULL;
 	outlen = 0;
-	for (size_t i = 0; i < vec_size(paths); i++) {
+	for (size_t i = 0; i < vec_len(paths); i++) {
 		pathlen = strlen(paths[i]);
 		out = xrealloc(out, outlen + pathlen + 1);
 		memcpy(out+outlen, paths[i], pathlen);

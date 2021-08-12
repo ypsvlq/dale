@@ -46,8 +46,8 @@ static void do_(char **args) {
 						varsetc("in", icur);
 						varsetc("out", ocur);
 						vec_push(cmds, NULL);
-						for (size_t i = 0; i < vec_size(rule->cmds); i++)
-							vec_push(cmds[vec_size(cmds)-1], varexpand(rule->cmds[i]));
+						for (size_t i = 0; i < vec_len(rule->cmds); i++)
+							vec_push(cmds[vec_len(cmds)-1], varexpand(rule->cmds[i]));
 						asprintf(&msg, "%s %s", rule->name, icur);
 						vec_push(msgs, msg);
 						varunset("in");
@@ -77,7 +77,7 @@ static void do_(char **args) {
 					varsetc("in", in);
 					varsetc("out", out);
 					vec_push(cmds, NULL);
-					for (size_t i = 0; i < vec_size(rule->cmds); i++)
+					for (size_t i = 0; i < vec_len(rule->cmds); i++)
 						vec_push(cmds[0], varexpand(rule->cmds[i]));
 					asprintf(&msg, "%s %s", rule->name, iarr ? out : in);
 					vec_push(msgs, msg);
@@ -90,8 +90,8 @@ static void do_(char **args) {
 
 			hostexec(cmds, msgs, 0);
 
-			for (size_t i = 0; i < vec_size(cmds); i++) {
-				for (size_t j = 0; j < vec_size(cmds[i]); j++)
+			for (size_t i = 0; i < vec_len(cmds); i++) {
+				for (size_t j = 0; j < vec_len(cmds[i]); j++)
 					free(cmds[i][j]);
 				vec_free(cmds[i]);
 				free(msgs[i]);

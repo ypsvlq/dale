@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
 		bscript = "build.dale";
 	parsef(bscript, true);
 
-	for (size_t i = 0; i < vec_size(want); i++) {
+	for (size_t i = 0; i < vec_len(want); i++) {
 		for (struct task *task = tasks; task < vec_end(tasks); task++) {
 			if (!strcmp(task->name, want[i])) {
 				task->want = true;
@@ -41,7 +41,7 @@ wantfound:;
 		if (want && !task->want)
 			continue;
 
-		printf("[%zu/%zu] %s\n", taskn++, want ? vec_size(want) : vec_size(tasks), task->name);
+		printf("[%zu/%zu] %s\n", taskn++, want ? vec_len(want) : vec_len(tasks), task->name);
 
 		newvarframe();
 		varsetc("_task", task->name);
@@ -124,7 +124,7 @@ static vec(char*) optparse(int argc, char *argv[]) {
 			}
 			if (!*(pdir+1)) {
 				if (gflag) {
-					for (size_t i = 0; i < vec_size(gflag); i++) {
+					for (size_t i = 0; i < vec_len(gflag); i++) {
 						asprintf(&p, "%s/%s.dale", *pdir, gflag[i]);
 						parsef(p, true);
 						free(p);
@@ -142,7 +142,7 @@ static vec(char*) optparse(int argc, char *argv[]) {
 	if (!lflag) {
 		parsef("local.dale", false);
 	} else {
-		for (size_t i = 0; i < vec_size(lflag); i++)
+		for (size_t i = 0; i < vec_len(lflag); i++)
 			parsef(lflag[i], true);
 		vec_free(lflag);
 	}

@@ -106,7 +106,7 @@ static void *thread(void *tdata) {
 		data->len--;
 		if (pthread_mutex_unlock(&data->mtx))
 			err("pthread_mutex_unlock: %s", strerror(errno));
-		for (size_t i = 0; i < vec_size(cmds); i++)
+		for (size_t i = 0; i < vec_len(cmds); i++)
 			if ((status = system(cmds[i])))
 				err("Command failed (exit code %d)", status);
 	}
@@ -114,7 +114,7 @@ static void *thread(void *tdata) {
 
 void hostexec(vec(vec(char*)) cmds, char **msgs, size_t jobs) {
 	pthread_t *threads;
-	struct tdata data = {.cmds = cmds, .msgs = msgs, .len = vec_size(cmds)};
+	struct tdata data = {.cmds = cmds, .msgs = msgs, .len = vec_len(cmds)};
 
 	if (!jobs) {
 #if defined __linux__ || defined __OpenBSD__ || defined __NetBSD__ || defined __FreeBSD__ || defined __DragonFly__

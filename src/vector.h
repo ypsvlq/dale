@@ -1,10 +1,10 @@
 #define vec(t) t *
 
 #define vec_setcap(vec,cap) ((size_t*)(vec))[-1] = cap
-#define vec_setsize(vec,size) ((size_t*)(vec))[-2] = size
+#define vec_setlen(vec,len) ((size_t*)(vec))[-2] = len
 
 #define vec_cap(vec) ((vec) ? ((size_t*)(vec))[-1] : 0)
-#define vec_size(vec) ((vec) ? ((size_t*)(vec))[-2] : 0)
+#define vec_len(vec) ((vec) ? ((size_t*)(vec))[-2] : 0)
 
 #define vec_resize(vec,cap) \
 	do { \
@@ -25,24 +25,24 @@
 		if (!(vec)) \
 			vec_resize(vec, 16); \
 		size_t Vcap = vec_cap(vec); \
-		size_t Vsize = vec_size(vec); \
-		if (Vcap <= Vsize) \
+		size_t Vlen = vec_len(vec); \
+		if (Vcap <= Vlen) \
 			vec_resize(vec, Vcap + Vcap/2); \
-		(vec)[Vsize] = val; \
-		vec_setsize(vec, Vsize+1); \
+		(vec)[Vlen] = val; \
+		vec_setlen(vec, Vlen+1); \
 	} while (0) \
 
 #define vec_erase(vec,idx) \
 	do { \
 		if (vec) { \
-			size_t Vnewsize = vec_size(vec) - 1; \
-			vec_setsize(vec, Vnewsize); \
-			memmove(vec+idx, vec+idx+1, (Vnewsize-idx) * sizeof(*(vec))); \
+			size_t Vnewlen = vec_len(vec) - 1; \
+			vec_setlen(vec, Vnewlen); \
+			memmove(vec+idx, vec+idx+1, (Vnewlen-idx) * sizeof(*(vec))); \
 		} \
 	} while (0) \
 
-#define vec_pop(vec) vec_setsize(vec, vec_size(vec) - 1)
+#define vec_pop(vec) vec_setlen(vec, vec_len(vec) - 1)
 
 #define vec_free(vec) free((vec) ? &((size_t*)(vec))[-2] : NULL)
 
-#define vec_end(vec) ((vec) ? &((vec)[vec_size(vec)]) : NULL)
+#define vec_end(vec) ((vec) ? &((vec)[vec_len(vec)]) : NULL)

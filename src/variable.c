@@ -57,8 +57,8 @@ void newvarframe(void) {
 		vec_resize(frame, 16);
 	} else {
 		clearframe = true;
-		while (vec_size(frame)) {
-			varunset(frame[vec_size(frame)-1]);
+		while (vec_len(frame)) {
+			varunset(frame[vec_len(frame)-1]);
 			vec_pop(frame);
 		}
 		clearframe = false;
@@ -114,7 +114,7 @@ void varunset(const char *name) {
 	}
 	if (tmp) {
 		if (frame && !clearframe) {
-			for (size_t i = vec_size(frame)-1; i; i--) {
+			for (size_t i = vec_len(frame)-1; i; i--) {
 				if (!strcmp(frame[i], tmp->name)) {
 					vec_erase(frame, i);
 					break;
