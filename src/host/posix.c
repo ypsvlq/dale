@@ -20,17 +20,6 @@ void hostsetvars(void) {
 	varsetc("_target", "posix");
 	varsetc("_posix", "1");
 	varsetc("_dllext", ".so");
-#if defined __linux__
-	varsetc("_linux", "1");
-#elif defined __OpenBSD__
-	varsetc("_openbsd", "1");
-#elif defined __NetBSD__
-	varsetc("_netbsd", "1");
-#elif defined __FreeBSD__
-	varsetc("_freebsd", "1");
-#elif defined __DragonFly__
-	varsetc("_dragonflybsd", "1");
-#endif
 }
 
 char **hostcfgs(void) {
