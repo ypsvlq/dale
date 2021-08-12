@@ -17,9 +17,9 @@ static void parse(const char *(*read)(void *data), void *data) {
 	size_t n;
 	char **args;
 	enum {NONE, TASK, BUILD, RULE} state;
-	struct task *task;
-	struct build *build;
-	struct rule *rule;
+	struct task *task = NULL;
+	struct build *build = NULL;
+	struct rule *rule = NULL;
 
 	state = NONE;
 	while ((buf = read(data))) {

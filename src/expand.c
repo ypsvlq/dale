@@ -33,9 +33,9 @@ char *varexpand(const char *str) {
 	char *bstack = NULL;
 	size_t nbstack = 0;
 
-	char *out, *p, *p2, *p3, *ctx;
+	char *out, *p, *p2=NULL, *p3, *ctx;
 	size_t len, sz;
-	bool negate;
+	bool negate = false;
 	vec(char*) args;
 
 	out = NULL;
