@@ -35,8 +35,9 @@ struct build {
 
 struct ebuiltin {
 	char *name;
-	char *(*fn)(vec(char*));
-	size_t minargs;
+	char *(*fn)(char **);
+	size_t nargs;
+	bool exprlast;
 };
 
 struct pbuiltin {

@@ -122,22 +122,26 @@ char *varexpand(const char *str) {
 				} else if (type == BUILTIN) {
 					for (size_t i = 0; ebuiltins[i].name; i++) {
 						if (!strcmp(ebuiltins[i].name, p3)) {
-							args = NULL;
+							args = xmalloc(sizeof(*args) * ebuiltins[i].nargs);
 							ctx = p;
 							p2 = rstrtok(&ctx, " \t");
-							for (size_t j = 0; j < ebuiltins[i].minargs; j++) {
+							for (size_t j = 0; j < ebuiltins[i].nargs; j++) {
 								if (!p2)
-									err("Builtin '%s' takes %zu args but got %zu", ebuiltins[i].name, ebuiltins[i].minargs, j);
-								vec_push(args, p2);
-								p2 = rstrtok(&ctx, " \t");
-							}
-							if (p2) {
-								if (p+sz-1 > p2+strlen(p2))
-									p2[strlen(p2)] = ' ';
-								vec_push(args, p2);
+									err("Builtin '%s' takes %zu args but got %zu", ebuiltins[i].name, ebuiltins[i].nargs, j);
+								if (ebuiltins[i].exprlast && j == ebuiltins[i].nargs-1) {
+									if (p+sz-1 > p2+strlen(p2))
+										p2[strlen(p2)] = ' ';
+									args[j] = p2;
+								} else {
+									args[j] = varexpand(p2);
+									p2 = rstrtok(&ctx, " \t");
+								}
 							}
 							p2 = ebuiltins[i].fn(args);
-							vec_free(args);
+							for (size_t j = 0; j < ebuiltins[i].nargs; j++)
+								if (!(ebuiltins[i].exprlast && j == ebuiltins[i].nargs-1))
+									free(args[j]);
+							free(args);
 							if (p2) {
 								sz = strlen(p2);
 								out = xrealloc(out, len+sz);

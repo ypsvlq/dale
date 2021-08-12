@@ -2,27 +2,24 @@
 #include <string.h>
 #include "dale.h"
 
-static char *map(vec(char*));
-static char *stripext(vec(char*));
-static char *glob_(vec(char*));
+static char *map(char **);
+static char *stripext(char **);
+static char *glob_(char **);
 
 const struct ebuiltin ebuiltins[] = {
-	{"map", map, 1},
-	{"stripext", stripext, 1},
-	{"glob", glob_, 1},
+	{"map", map, 2, true},
+	{"stripext", stripext, 1, false},
+	{"glob", glob_, 1, false},
 	{0}
 };
 
-static char *map(vec(char*) args) {
+static char *map(char **args) {
 	char *out = NULL;
 	size_t len = 0;
 	char *arr, *cur, *p, *ctx;
 	size_t n;
 
-	if (vec_size(args) < 2)
-		err("Nothing to map");
-
-	arr = xstrdup(varget(args[0]));
+	arr = args[0];
 	ctx = arr;
 	while ((cur = rstrtok(&ctx, " \t"))) {
 		varsetc("_", cur);
@@ -36,28 +33,21 @@ static char *map(vec(char*) args) {
 		varunset("_");
 	}
 
-	free(arr);
 	if (out)
 		out[len] = '\0';
 	return out;
 }
 
-static char *stripext(vec(char*) args) {
-	char *s, *out;
-	s = varexpand(args[0]);
-	out = xstrndup(s, strrchr(s, '.') - s);
-	free(s);
-	return out;
+static char *stripext(char **args) {
+	return xstrndup(args[0], strrchr(args[0], '.') - args[0]);
 }
 
-static char *glob_(vec(char*) args) {
-	char *pattern, *out;
+static char *glob_(char **args) {
+	char *out;
 	size_t outlen, pathlen;
 	vec(char*) paths = NULL;
 
-	pattern = varexpand(args[0]);
-	glob(pattern, &paths);
-
+	glob(args[0], &paths);
 	out = NULL;
 	outlen = 0;
 	for (size_t i = 0; i < vec_size(paths); i++) {
@@ -68,10 +58,9 @@ static char *glob_(vec(char*) args) {
 		out[outlen++] = ' ';
 		free(paths[i]);
 	}
+
 	if (out)
 		out[outlen-1] = 0;
-
-	free(pattern);
 	vec_free(paths);
 	return out;
 }
