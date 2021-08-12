@@ -25,8 +25,11 @@ static void parse(const char *(*read)(void *data), void *data) {
 	while ((buf = read(data))) {
 		line++;
 		p = buf + strspn(buf, " \t");
-		if (*p == '\n' || *p == '#')
+		if (*p == '\n' || *p == '#') {
+			if (state == BUILD)
+				vec_push(build->steps, "\n");
 			continue;
+		}
 		if (buf == p) {
 			if (*p == '@') {
 				p++;
