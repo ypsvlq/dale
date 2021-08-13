@@ -213,7 +213,7 @@ void hostexec(vec(vec(char*)) cmds, char **msgs, size_t jobs) {
 	threads = xmalloc(jobs * sizeof(*threads));
 	for (size_t i = 0; i < jobs; i++)
 		threads[i] = CreateThread(NULL, 0, thread, &data, 0, NULL);
-	WaitForMultipleObjects(jobs, threads, true, INFINITE);
+	WaitForMultipleObjects((DWORD)jobs, threads, true, INFINITE);
 	DeleteCriticalSection(&data.cs);
 	free(threads);
 }
