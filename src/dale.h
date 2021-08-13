@@ -65,6 +65,7 @@ char *xstrdup(const char *s);
 char *xstrndup(const char *s, size_t max);
 int asprintf(char **outp, const char *fmt, ...);
 char *rstrtok(char **sp, const char *delim);
+size_t atosz(const char *s);
 
 void glob(char *pattern, vec(char*) *out);
 

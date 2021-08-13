@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
+#include <errno.h>
 #include "dale.h"
 
 noreturn void err(const char *fmt, ...) {
@@ -82,4 +84,20 @@ char *rstrtok(char **sp, const char *delim) {
 
 	*sp = end;
 	return s;
+}
+
+static uintmax_t lstrtou(const char *s, uintmax_t max) {
+	uintmax_t um;
+	char *endp;
+	errno = 0;
+	um = strtoumax(s, &endp, 0);
+	if (errno == ERANGE || um > max)
+		err("Overflow converting '%s' to int", s);
+	if (*endp)
+		fprintf(stderr, "Warning: Extra data when converting '%s' to int\n", s);
+	return um;
+}
+
+size_t atosz(const char *s) {
+	return lstrtou(s, SIZE_MAX);
 }
