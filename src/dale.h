@@ -48,6 +48,7 @@ struct pbuiltin {
 
 extern vec(struct task) tasks;
 extern vec(struct build) builds;
+extern size_t jobs;
 
 extern const char *fname;
 extern size_t line;

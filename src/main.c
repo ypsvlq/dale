@@ -6,6 +6,7 @@
 
 vec(struct task) tasks;
 vec(struct build) builds;
+size_t jobs;
 
 static vec(char*) optparse(int argc, char *argv[]);
 
@@ -17,6 +18,8 @@ int main(int argc, char *argv[]) {
 	hostinit();
 
 	want = optparse(argc, argv);
+
+	jobs = atosz(varget("_jobs"));
 
 	bscript = vargetnull("_bscript");
 	if (!bscript)

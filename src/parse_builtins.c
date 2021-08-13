@@ -88,7 +88,7 @@ static void do_(char **args) {
 				err("More outputs than inputs");
 			}
 
-			hostexec(cmds, msgs, 0);
+			hostexec(cmds, msgs, jobs);
 
 			for (size_t i = 0; i < vec_len(cmds); i++) {
 				for (size_t j = 0; j < vec_len(cmds[i]); j++)
