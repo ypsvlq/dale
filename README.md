@@ -144,8 +144,8 @@ the extra variables `$out` and `$in` set to the output file and input file(s).
 
 The following builtins are available for use in `${}` variable expansions.
 
-- `${map arr var expr}` - for each item in `arr`, set `var` to that item and
-  expand to the result of expanding `expr`
+- `${map arr expr}` - expands to the result of expanding `expr` for each item
+  in `arr` with `$_` set to the current item
 - `${glob pattern}` - expands to all paths matched by `pattern`
 - `${stripext path}` - expands to `path` without its file extension
 
