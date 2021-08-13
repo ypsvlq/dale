@@ -16,12 +16,6 @@ void hostinit(void) {
 void hostquit(void) {
 }
 
-void hostsetvars(void) {
-	varsetc("_target", "posix");
-	varsetc("_posix", "1");
-	varsetc("_dllext", ".so");
-}
-
 char **hostcfgs(void) {
 	static char *cfgs[3];
 	char *p;

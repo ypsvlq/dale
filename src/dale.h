@@ -83,7 +83,6 @@ char *varexpand(const char *str);
 
 void hostinit(void);
 void hostquit(void);
-void hostsetvars(void);
 char **hostcfgs(void);
 void hostmkdir(const char *path);
 bool hostfnewer(const char *path1, const char *path2);

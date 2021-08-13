@@ -18,9 +18,6 @@ int main(int argc, char *argv[]) {
 
 	want = optparse(argc, argv);
 
-	if (*varget("_nodefvar") != '1')
-		hostsetvars();
-
 	bscript = vargetnull("_bscript");
 	if (!bscript)
 		bscript = "build.dale";

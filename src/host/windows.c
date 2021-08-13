@@ -53,13 +53,6 @@ void hostquit(void) {
 	SetConsoleOutputCP(defaultcp);
 }
 
-void hostsetvars(void) {
-	varsetc("_target", "windows");
-	varsetc("_windows", "1");
-	varsetc("_exeext", ".exe");
-	varsetc("_dllext", ".dll");
-}
-
 char **hostcfgs(void) {
 	static char *cfgs[2];
 	char *p;
