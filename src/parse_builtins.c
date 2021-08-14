@@ -113,7 +113,7 @@ static void mkdirs(char **args) {
 			if (cur != path)
 				cur[-1] = '/';
 			hostmkdir(path);
-			if (!strchr(ctxp, '/')) {
+			if (ctxp && !strchr(ctxp, '/')) {
 				ctxp[-1] = '/';
 				break;
 			}
