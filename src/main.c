@@ -6,6 +6,7 @@
 
 vec(struct task) tasks;
 vec(struct build) builds;
+struct task *curtask;
 size_t jobs;
 
 static vec(char*) optparse(int argc, char *argv[]);
@@ -37,19 +38,19 @@ int main(int argc, char *argv[]) {
 wantfound:;
 	}
 
-	for (struct task *task = tasks; task < vec_end(tasks); task++) {
-		if (want && !task->want)
+	for (curtask = tasks; curtask < vec_end(tasks); curtask++) {
+		if (want && !curtask->want)
 			continue;
 
-		printf("[%zu/%zu] %s\n", taskn++, want ? vec_len(want) : vec_len(tasks), task->name);
+		printf("[%zu/%zu] %s\n", taskn++, want ? vec_len(want) : vec_len(tasks), curtask->name);
 
 		newvarframe();
-		varsetc("_task", task->name);
-		varsetc("_type", task->type);
-		for (struct taskvar *var = task->vars; var < vec_end(task->vars); var++)
+		varsetc("_task", curtask->name);
+		varsetc("_type", curtask->type);
+		for (struct taskvar *var = curtask->vars; var < vec_end(curtask->vars); var++)
 			varsetc(var->name, var->val);
 
-		parsea(task->build->steps, task->build->fname, task->build->line);
+		parsea(curtask->build->steps, curtask->build->fname, curtask->build->line);
 	}
 
 	hostquit();

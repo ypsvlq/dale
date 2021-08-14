@@ -19,7 +19,7 @@ static void dump(char **args) {
 }
 
 static void do_(char **args) {
-	struct build *build = builds;
+	struct build *build = curtask->build;
 	char *in, *out;
 	char *ictx, *octx, *icur, *ocur;
 	bool iarr, oarr, exec;
