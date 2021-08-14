@@ -29,8 +29,8 @@ static void do_(char **args) {
 
 	for (struct rule *rule = build->rules; rule < vec_end(build->rules); rule++) {
 		if (!strcmp(rule->name, args[0])) {
-			out = varget(args[1]);
-			in = varget(args[2]);
+			out = args[1];
+			in = args[2];
 
 			iarr = strpbrk(in, " \t");
 			oarr = strpbrk(out, " \t");
@@ -106,7 +106,7 @@ static void do_(char **args) {
 
 static void mkdirs(char **args) {
 	char *arr, *path, *cur, *ctxa, *ctxp;
-	ctxa = arr = xstrdup(varget(args[0]));
+	ctxa = arr = xstrdup(args[0]);
 	while ((path = rstrtok(&ctxa, " \t"))) {
 		ctxp = path;
 		while ((cur = rstrtok(&ctxp, "/"))) {

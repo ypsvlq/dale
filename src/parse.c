@@ -46,7 +46,7 @@ static void parse(const char *(*read)(void *data), void *data) {
 						n = 0;
 						if (*p2) {
 							while ((cur = rstrtok(&ctx, " \t"))) {
-								args[n++] = cur;
+								args[n++] = varexpand(cur);
 								if (n == pbuiltins[i].nargs)
 									break;
 							}
@@ -57,6 +57,8 @@ static void parse(const char *(*read)(void *data), void *data) {
 							err("Builtin '%s' takes %zu arguments but got %zu", pbuiltins[i].name, pbuiltins[i].nargs, n);
 						pbuiltins[i].fn(args);
 						free(p2);
+						for (size_t j = 0; j < pbuiltins[i].nargs; j++)
+							free(args[j]);
 						free(args);
 						goto assigned;
 					}
