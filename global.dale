@@ -10,8 +10,8 @@ build(c)
 	obj = ${map $src $objdir/${stripext $_}$objext}
 	out = $outdir/$_task$($(_type)ext)
 
-	@mkdirs obj
-	@mkdirs out
+	@mkdirs $obj
+	@mkdirs $out
 
-	@do Compile obj src
-	@do Link out obj
+	@do Compile $obj $src
+	@do Link.$(_type) $out $obj
