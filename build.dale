@@ -1,3 +1,3 @@
 exe(dale)
-	src: src/*.c src/host/$_target.c
-	lib: $[_posix pthread]
+	src: src/*.c src/host/$target.c
+	lib: $[posix pthread]
